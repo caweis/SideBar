@@ -1,0 +1,12 @@
+{
+  "name": "sidebar-planning",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Sidebar planning-side starter — multi-household voting + coordination on Cloudflare Pages + D1.",
+  "scripts": {
+    "dev": "wrangler pages dev ./site"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}

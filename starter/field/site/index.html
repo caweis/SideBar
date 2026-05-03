@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Sidebar field companion</title>
+<style>
+  :root {
+    --bg: #fbf7ee;
+    --ink: #2a2622;
+    --muted: #7a7268;
+    --accent: #2d5a3f;
+    --warn: #8c4a2b;
+    --line: #d8cfc0;
+    --tile: #fff;
+    --tile-hover: #f5efe3;
+    --tile-done: #e6efe2;
+    --display: ui-serif, Georgia, serif;
+    --body: ui-sans-serif, system-ui, sans-serif;
+    --mono: ui-monospace, "JetBrains Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    line-height: 1.5;
+    padding: 24px 16px 80px;
+  }
+  main { max-width: 720px; margin: 0 auto; }
+  h1 { font-family: var(--display); font-size: 1.8rem; margin: 0 0 4px; }
+  h2 { font-family: var(--display); font-size: 1.3rem; margin: 28px 0 10px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+  h3 { font-family: var(--display); font-size: 1.05rem; margin: 0 0 4px; }
+  h4 { font-family: var(--mono); font-size: 0.9rem; margin: 0 0 6px; color: var(--muted); }
+  p { margin: 0 0 10px; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .who strong { color: var(--accent); }
+
+  #trip { padding: 4px 0 12px; }
+
+  .place-card {
+    display: grid; grid-template-columns: 36px 1fr;
+    gap: 10px; align-items: start;
+    background: var(--tile); border: 1px solid var(--line); border-radius: 6px;
+    padding: 12px; margin-bottom: 8px;
+  }
+  .place-card.done { background: var(--tile-done); border-color: var(--accent); }
+  .completion-toggle {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 1px solid var(--line); background: var(--bg);
+    font-size: 1.1rem; cursor: pointer;
+  }
+  .place-card.done .completion-toggle {
+    background: var(--accent); color: var(--bg); border-color: var(--accent);
+  }
+  .place-body h3 .kind {
+    font-family: var(--mono); font-size: 0.75rem; font-weight: normal;
+    color: var(--muted); margin-left: 6px;
+    padding: 1px 6px; border: 1px solid var(--line); border-radius: 3px;
+  }
+
+  form { background: var(--tile); border: 1px solid var(--line); border-radius: 6px; padding: 14px; margin: 12px 0; }
+  form label { display: block; margin-bottom: 8px; font-size: 0.9rem; }
+  form input[type=text], form input[type=password], form input[type=date], form textarea {
+    display: block; width: 100%; padding: 6px 8px; font: inherit;
+    border: 1px solid var(--line); border-radius: 4px; background: var(--bg); margin-top: 2px;
+  }
+  form textarea { resize: vertical; font-family: var(--body); }
+  form button {
+    padding: 6px 14px; font: inherit; font-size: 0.9rem;
+    background: var(--accent); color: var(--bg); border: 0; border-radius: 4px;
+    cursor: pointer; margin-top: 6px;
+  }
+  form button:hover { opacity: 0.92; }
+
+  .entries .entry {
+    background: var(--tile); border: 1px solid var(--line); border-radius: 6px;
+    padding: 12px; margin-bottom: 8px;
+  }
+  .entries .entry p { margin: 0; white-space: pre-wrap; }
+
+  .warn { color: var(--warn); }
+
+  footer {
+    max-width: 720px; margin: 64px auto 0;
+    padding-top: 16px; border-top: 1px solid var(--line);
+    font-size: 0.85rem; color: var(--muted);
+  }
+  footer code { font-size: 0.85rem; padding: 1px 4px; background: var(--tile); border-radius: 3px; }
+</style>
+</head>
+<body>
+<main>
+
+<div id="trip">loading…</div>
+
+<h2>Places</h2>
+<p class="muted">Tap the circle to mark a place complete. Per-user — your completions are private to you.</p>
+<div id="catalog"></div>
+
+<h2>Journal</h2>
+<div id="journal"></div>
+
+<footer>
+  Sidebar engineering method · <code>github.com/caweis/SideBar</code> · this is the field-companion starter scaffold
+</footer>
+
+</main>
+
+<script type="module">
+const KEY_CHECK_PLAINTEXT = 'sidebar-field-ok';
+
+const state = {
+  me: null,
+  trip: null,
+  places: [],
+  completions: [],
+  entries: [],
+  decrypted: {},
+  encryption: { enabled: false },
+  cryptoKey: null
+};
+
+// ─── helpers ────────────────────────────────────────────────────────
+async function api(path, method = 'GET', body = null) {
+  const res = await fetch(path, {
+    method,
+    headers: body ? { 'content-type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : null
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || `${method} ${path} failed (${res.status})`);
+  }
+  return res.json();
+}
+
+function todayIso() { return new Date().toISOString().slice(0, 10); }
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+// ─── crypto ─────────────────────────────────────────────────────────
+function b64Encode(buf) {
+  const bytes = new Uint8Array(buf);
+  let s = '';
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s);
+}
+function b64Decode(s) {
+  const bin = atob(s);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+async function deriveKey(passphrase, saltB64, iterations) {
+  const salt = b64Decode(saltB64);
+  const baseKey = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(passphrase),
+    { name: 'PBKDF2' }, false, ['deriveKey']
+  );
+  return await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: iterations || 200000, hash: 'SHA-256' },
+    baseKey,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function encryptText(text, key) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    new TextEncoder().encode(text)
+  );
+  return { ct: b64Encode(ct), iv: b64Encode(iv) };
+}
+
+async function decryptText(ctB64, ivB64, key) {
+  try {
+    const ct = b64Decode(ctB64);
+    const iv = b64Decode(ivB64);
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+    return new TextDecoder().decode(pt);
+  } catch { return null; }
+}
+
+// ─── encryption setup / unlock ──────────────────────────────────────
+async function enableEncryption(passphrase) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const saltB64 = b64Encode(salt);
+  const iterations = 200000;
+  const key = await deriveKey(passphrase, saltB64, iterations);
+  const { ct, iv } = await encryptText(KEY_CHECK_PLAINTEXT, key);
+  await api('/api/user-encryption', 'POST', {
+    salt: saltB64, key_check_ct: ct, key_check_iv: iv, iterations
+  });
+  state.encryption = { enabled: true, salt: saltB64, key_check_ct: ct, key_check_iv: iv, iterations };
+  state.cryptoKey = key;
+}
+
+async function unlockEncryption(passphrase) {
+  if (!state.encryption.enabled) throw new Error('encryption not enabled');
+  const key = await deriveKey(passphrase, state.encryption.salt, state.encryption.iterations);
+  const verified = await decryptText(state.encryption.key_check_ct, state.encryption.key_check_iv, key);
+  if (verified !== KEY_CHECK_PLAINTEXT) throw new Error('wrong passphrase');
+  state.cryptoKey = key;
+  for (const entry of state.entries) {
+    if (entry.is_encrypted && entry.iv) {
+      const pt = await decryptText(entry.body, entry.iv, key);
+      if (pt !== null) state.decrypted[entry.date] = pt;
+    }
+  }
+}
+
+// ─── data loading ───────────────────────────────────────────────────
+async function loadAll() {
+  const [me, trip, catalog, completions, encryption, journal] = await Promise.all([
+    api('/api/me'),
+    api('/api/trip'),
+    api('/api/catalog'),
+    api('/api/completions'),
+    api('/api/user-encryption'),
+    api('/api/journal')
+  ]);
+  state.me = me.email;
+  state.trip = trip;
+  state.places = catalog.places;
+  state.completions = completions.completions;
+  state.encryption = encryption;
+  state.entries = journal.entries;
+}
+
+// ─── render ─────────────────────────────────────────────────────────
+function renderTrip() {
+  document.getElementById('trip').innerHTML = `
+    <h1>${escapeHtml(state.trip.name)}</h1>
+    <p class="muted">${state.trip.trip_start} → ${state.trip.trip_end}</p>
+    ${state.trip.notes ? `<p>${escapeHtml(state.trip.notes)}</p>` : ''}
+    <p class="who muted">You're <strong>${escapeHtml(state.me)}</strong></p>
+  `;
+}
+
+function renderCatalog() {
+  const done = new Set(state.completions.map(c => `${c.kind}|${c.target_id}`));
+  document.getElementById('catalog').innerHTML = state.places.map(p => {
+    const isDone = done.has(`place|${p.id}`);
+    return `<div class="place-card ${isDone ? 'done' : ''}">
+      <button class="completion-toggle" data-id="${p.id}" title="Toggle completion">${isDone ? '✓' : '○'}</button>
+      <div class="place-body">
+        <h3>${escapeHtml(p.name)} <span class="kind">${escapeHtml(p.kind)}</span></h3>
+        ${p.location_hint ? `<p class="muted">${escapeHtml(p.location_hint)}</p>` : ''}
+        ${p.notes ? `<p>${escapeHtml(p.notes)}</p>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderJournal() {
+  const el = document.getElementById('journal');
+
+  if (!state.encryption.enabled) {
+    el.innerHTML = `
+      <p>Your journal is unencrypted by default. Enable encryption to lock entries with a passphrase that <em>the server never sees</em>.</p>
+      <p class="warn"><strong>There is no recovery.</strong> If you lose the passphrase, encrypted entries are unrecoverable.</p>
+      <form class="encrypt-setup">
+        <label>Passphrase: <input type="password" name="pass" required minlength="8"></label>
+        <label>Confirm: <input type="password" name="confirm" required minlength="8"></label>
+        <button type="submit">Enable encryption</button>
+      </form>
+      ${renderEntriesSection()}
+    `;
+    return;
+  }
+
+  if (!state.cryptoKey) {
+    el.innerHTML = `
+      <p>Journal is encrypted. Enter your passphrase to unlock.</p>
+      <form class="encrypt-unlock">
+        <label>Passphrase: <input type="password" name="pass" required></label>
+        <button type="submit">Unlock</button>
+      </form>
+    `;
+    return;
+  }
+
+  el.innerHTML = `
+    <p>Journal unlocked. Entries are encrypted at rest — the server stores only opaque ciphertext.</p>
+    <form class="entry-new">
+      <label>Date: <input type="date" name="date" value="${todayIso()}" required></label>
+      <textarea name="body" placeholder="What happened today?" rows="4" required></textarea>
+      <button type="submit">Save entry</button>
+    </form>
+    ${renderEntriesSection()}
+  `;
+}
+
+function renderEntriesSection() {
+  if (!state.entries.length) return '<p class="muted">No entries yet.</p>';
+  const items = state.entries.map(e => {
+    let display;
+    if (e.is_encrypted) {
+      display = state.decrypted[e.date] !== undefined
+        ? escapeHtml(state.decrypted[e.date])
+        : '<em class="muted">[encrypted — unlock to read]</em>';
+    } else {
+      display = escapeHtml(e.body);
+    }
+    return `<article class="entry">
+      <h4>${e.date}${e.is_encrypted ? ' 🔒' : ''}</h4>
+      <p>${display}</p>
+    </article>`;
+  }).join('');
+  return `<div class="entries">${items}</div>`;
+}
+
+// ─── event handlers ─────────────────────────────────────────────────
+document.addEventListener('click', async (e) => {
+  const toggle = e.target.closest('.completion-toggle');
+  if (toggle) {
+    try {
+      await api('/api/completions', 'POST', { kind: 'place', target_id: toggle.dataset.id });
+      const data = await api('/api/completions');
+      state.completions = data.completions;
+      renderCatalog();
+    } catch (err) { alert(err.message); }
+  }
+});
+
+document.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+
+  if (form.classList.contains('encrypt-setup')) {
+    const pass = form.pass.value;
+    if (pass !== form.confirm.value) { alert('passphrases do not match'); return; }
+    if (pass.length < 8) { alert('passphrase must be at least 8 characters'); return; }
+    try { await enableEncryption(pass); renderJournal(); }
+    catch (err) { alert(err.message); }
+    return;
+  }
+
+  if (form.classList.contains('encrypt-unlock')) {
+    try { await unlockEncryption(form.pass.value); renderJournal(); }
+    catch (err) { alert(err.message); }
+    return;
+  }
+
+  if (form.classList.contains('entry-new')) {
+    const date = form.date.value;
+    const text = form.body.value;
+    if (!date || !text) return;
+
+    let payload;
+    if (state.encryption.enabled && state.cryptoKey) {
+      const { ct, iv } = await encryptText(text, state.cryptoKey);
+      payload = { date, body: ct, is_encrypted: 1, iv };
+    } else {
+      payload = { date, body: text, is_encrypted: 0 };
+    }
+
+    try {
+      await api('/api/journal', 'PATCH', payload);
+      state.decrypted[date] = text;
+      const data = await api('/api/journal');
+      state.entries = data.entries;
+      renderJournal();
+    } catch (err) { alert(err.message); }
+  }
+});
+
+// ─── init ───────────────────────────────────────────────────────────
+(async () => {
+  if ('serviceWorker' in navigator) {
+    try { await navigator.serviceWorker.register('/sw.js'); }
+    catch (e) { console.warn('SW registration failed', e); }
+  }
+  try {
+    await loadAll();
+    renderTrip();
+    renderCatalog();
+    renderJournal();
+  } catch (err) {
+    document.getElementById('trip').textContent = 'Error: ' + err.message;
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Sidebar planning starter</title>
+<style>
+  :root {
+    --bg: #fbf7ee;
+    --ink: #2a2622;
+    --muted: #7a7268;
+    --accent: #8c4a2b;
+    --line: #d8cfc0;
+    --tile: #fff;
+    --tile-hover: #f5efe3;
+    --tile-mine: #fce8d5;
+    --display: ui-serif, Georgia, serif;
+    --body: ui-sans-serif, system-ui, sans-serif;
+    --mono: ui-monospace, "JetBrains Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    line-height: 1.5;
+    padding: 32px 16px 80px;
+  }
+  main { max-width: 760px; margin: 0 auto; }
+  h1 { font-family: var(--display); font-size: 2rem; margin: 0 0 4px; }
+  h1 + .tagline { color: var(--muted); margin: 0 0 32px; font-style: italic; }
+  h2 { font-family: var(--display); font-size: 1.4rem; margin: 32px 0 12px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+  h3 { font-family: var(--display); font-size: 1.1rem; margin: 0 0 6px; }
+  p { margin: 0 0 12px; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+
+  #identity {
+    background: var(--tile);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+  }
+  #identity strong { color: var(--accent); }
+  .hh-pick {
+    margin-left: 6px;
+    padding: 4px 12px;
+    font: inherit;
+    background: var(--tile);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .hh-pick:hover { background: var(--tile-hover); }
+
+  .vote-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    padding: 0;
+  }
+  .vote-card {
+    text-align: left;
+    padding: 16px;
+    background: var(--tile);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    transition: background 120ms;
+  }
+  .vote-card:hover { background: var(--tile-hover); }
+  .vote-card.mine { background: var(--tile-mine); border-color: var(--accent); }
+  .vote-card .label { font-weight: 600; margin-bottom: 4px; }
+  .vote-card .meta { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
+  .vote-card .tally { font-size: 0.85rem; color: var(--accent); }
+
+  .combo-card {
+    background: var(--tile);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .city-inputs { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+  .city-input { display: flex; flex-direction: column; gap: 4px; }
+  .city-input span { font-size: 0.85rem; color: var(--muted); }
+  .city-input input {
+    width: 70px; padding: 6px 8px; font: inherit;
+    border: 1px solid var(--line); border-radius: 4px; background: var(--bg);
+  }
+  .submit-night {
+    padding: 6px 14px; font: inherit; font-size: 0.9rem;
+    background: var(--accent); color: var(--bg); border: 0; border-radius: 4px;
+    cursor: pointer;
+  }
+  .submit-night:hover { opacity: 0.9; }
+  .leading { margin-top: 12px; padding-top: 8px; border-top: 1px dashed var(--line); font-size: 0.9rem; }
+  .leading .muted { margin-left: 4px; }
+
+  #activity { list-style: none; padding: 0; margin: 0; }
+  #activity li {
+    display: grid; grid-template-columns: 140px 1fr auto auto;
+    gap: 8px; padding: 6px 8px; align-items: baseline;
+    border-bottom: 1px solid var(--line); font-size: 0.85rem;
+  }
+  #activity li:last-child { border-bottom: 0; }
+  #activity time { font-family: var(--mono); color: var(--muted); }
+  #activity .who { color: var(--accent); }
+  #activity .action { font-family: var(--mono); }
+  #activity .target { color: var(--muted); font-family: var(--mono); }
+
+  footer {
+    max-width: 760px; margin: 64px auto 0;
+    padding-top: 16px; border-top: 1px solid var(--line);
+    font-size: 0.85rem; color: var(--muted);
+  }
+  footer code { font-size: 0.85rem; padding: 1px 4px; background: var(--tile); border-radius: 3px; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Sidebar planning starter</h1>
+<p class="tagline">Multi-household voting + coordination on Cloudflare Pages + D1.</p>
+
+<div id="identity">loading…</div>
+
+<h2>Pick a date</h2>
+<p class="muted">One vote per household. Click a card to vote; click again to clear.</p>
+<div class="vote-grid" id="dates"></div>
+
+<h2>Allocate nights across cities</h2>
+<p class="muted">Multi-field vote — each household submits a full tuple. The leading allocation is the most common tuple across households (mode of tuples, not per-field median).</p>
+<div id="nights"></div>
+
+<h2>Recent activity</h2>
+<ul id="activity"></ul>
+
+<footer>
+  Sidebar engineering method · <code>github.com/caweis/SideBar</code> · this is the planning-side starter scaffold
+</footer>
+
+</main>
+
+<script type="module">
+const state = {
+  me: null,
+  name: null,
+  household_id: null,
+  households: [],
+  dateOptions: [],
+  dateVotes: [],
+  combos: [],
+  nightVotes: [],
+  activity: []
+};
+
+async function api(path, method = 'GET', body = null) {
+  const res = await fetch(path, {
+    method,
+    headers: body ? { 'content-type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : null
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || `${method} ${path} failed (${res.status})`);
+  }
+  return res.json();
+}
+
+async function loadMe() {
+  const data = await api('/api/me');
+  state.me = data.email;
+  state.name = data.name;
+  state.household_id = data.household_id;
+  state.households = data.households;
+}
+
+async function refresh() {
+  const [dates, nights, activity] = await Promise.all([
+    api('/api/dates'),
+    api('/api/night-votes'),
+    api('/api/activity')
+  ]);
+  state.dateOptions = dates.options;
+  state.dateVotes = dates.votes;
+  state.combos = nights.combos;
+  state.nightVotes = nights.votes;
+  state.activity = activity.activity;
+  renderAll();
+}
+
+function renderAll() {
+  renderIdentity();
+  renderDates();
+  renderNights();
+  renderActivity();
+}
+
+function renderIdentity() {
+  const el = document.getElementById('identity');
+  if (!state.me) { el.textContent = 'loading…'; return; }
+
+  if (!state.household_id) {
+    const opts = state.households.map(h =>
+      `<button class="hh-pick" data-hh="${h.id}">${h.label}</button>`
+    ).join('');
+    el.innerHTML = `You're <strong>${state.me}</strong>. Pick a household: ${opts}`;
+  } else {
+    el.innerHTML = `You're <strong>${state.me}</strong> · Household <strong>${state.household_id}</strong>`;
+  }
+}
+
+function renderDates() {
+  const tally = {};
+  state.dateVotes.forEach(v => { tally[v.date_option_id] = (tally[v.date_option_id] || 0) + 1; });
+  const myVote = state.dateVotes.find(v => v.household_id === state.household_id)?.date_option_id;
+
+  document.getElementById('dates').innerHTML = state.dateOptions.map(opt => {
+    const count = tally[opt.id] || 0;
+    const mine = myVote === opt.id ? 'mine' : '';
+    return `<button class="vote-card ${mine}" data-axis="date" data-option="${opt.id}">
+      <div class="label">${opt.label}</div>
+      <div class="meta">${opt.start} → ${opt.end}</div>
+      <div class="tally">${count} household${count === 1 ? '' : 's'}</div>
+    </button>`;
+  }).join('');
+}
+
+// Mode of tuples — the signature aggregation pattern. Each household
+// contributes a full tuple of values; the leading allocation is the
+// most common tuple across households, not the per-field median.
+// See skills/mode-of-tuples-voting.md.
+function leadingAllocation(comboId) {
+  const combo = state.combos.find(c => c.id === comboId);
+  if (!combo) return null;
+
+  const byHh = {};
+  state.nightVotes
+    .filter(v => v.combo_id === comboId)
+    .forEach(v => {
+      byHh[v.household_id] = byHh[v.household_id] || {};
+      byHh[v.household_id][v.city_id] = v.nights;
+    });
+
+  const tally = {};
+  for (const alloc of Object.values(byHh)) {
+    if (combo.cities.every(c => Number.isFinite(alloc[c.id]))) {
+      const key = JSON.stringify(combo.cities.map(c => alloc[c.id]));
+      tally[key] = (tally[key] || 0) + 1;
+    }
+  }
+
+  const entries = Object.entries(tally).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) return null;
+  const [topKey, topCount] = entries[0];
+  const values = JSON.parse(topKey);
+  return {
+    allocation: combo.cities.reduce((acc, c, i) => ({ ...acc, [c.id]: values[i] }), {}),
+    households: topCount,
+    total: Object.values(byHh).length
+  };
+}
+
+function renderNights() {
+  document.getElementById('nights').innerHTML = state.combos.map(combo => {
+    const myAlloc = {};
+    state.nightVotes
+      .filter(v => v.combo_id === combo.id && v.household_id === state.household_id)
+      .forEach(v => { myAlloc[v.city_id] = v.nights; });
+
+    const lead = leadingAllocation(combo.id);
+
+    const cityInputs = combo.cities.map(city => `
+      <label class="city-input">
+        <span>${city.label}</span>
+        <input type="number" min="1" max="${combo.total - combo.cities.length + 1}"
+          data-combo="${combo.id}" data-city="${city.id}"
+          value="${myAlloc[city.id] || ''}">
+      </label>
+    `).join('');
+
+    const leadHtml = lead
+      ? `<div class="leading">Leading: ${combo.cities.map(c => `<strong>${lead.allocation[c.id]}</strong> in ${c.label}`).join(' + ')} <span class="muted">(${lead.households}/${lead.total} households)</span></div>`
+      : `<div class="leading muted">No complete tuples yet.</div>`;
+
+    return `<div class="combo-card">
+      <h3>${combo.label}</h3>
+      <p class="muted">Allocate ${combo.total} nights total. Every city needs ≥1.</p>
+      <div class="city-inputs">${cityInputs}</div>
+      <button class="submit-night" data-combo="${combo.id}">Submit allocation</button>
+      ${leadHtml}
+    </div>`;
+  }).join('');
+}
+
+function renderActivity() {
+  const fmt = ts => {
+    const d = new Date(ts);
+    return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
+  document.getElementById('activity').innerHTML = state.activity.map(a => `
+    <li>
+      <time>${fmt(a.ts)}</time>
+      <span class="who">${a.voter_email || '—'}</span>
+      <span class="action">${a.action}</span>
+      <span class="target">${a.target_id ? '→ ' + a.target_id : ''}</span>
+    </li>
+  `).join('') || '<li class="muted">No activity yet.</li>';
+}
+
+document.addEventListener('click', async (e) => {
+  const hhBtn = e.target.closest('.hh-pick');
+  if (hhBtn) {
+    try {
+      await api('/api/me', 'POST', { household_id: hhBtn.dataset.hh });
+      await loadMe();
+      await refresh();
+    } catch (err) { alert(err.message); }
+    return;
+  }
+
+  const voteCard = e.target.closest('.vote-card[data-axis="date"]');
+  if (voteCard) {
+    if (!state.household_id) { alert('Pick a household first.'); return; }
+    try {
+      await api('/api/dates', 'POST', { date_option_id: voteCard.dataset.option });
+      await refresh();
+    } catch (err) { alert(err.message); }
+    return;
+  }
+
+  const submitBtn = e.target.closest('.submit-night');
+  if (submitBtn) {
+    if (!state.household_id) { alert('Pick a household first.'); return; }
+    const comboId = submitBtn.dataset.combo;
+    const inputs = document.querySelectorAll(`input[data-combo="${comboId}"]`);
+    const allocation = {};
+    inputs.forEach(input => {
+      const v = parseInt(input.value, 10);
+      if (Number.isFinite(v)) allocation[input.dataset.city] = v;
+    });
+    try {
+      await api('/api/night-votes', 'POST', { combo_id: comboId, allocation });
+      await refresh();
+    } catch (err) { alert(err.message); }
+  }
+});
+
+(async () => {
+  try {
+    await loadMe();
+    await refresh();
+  } catch (err) {
+    document.getElementById('identity').textContent = 'Error: ' + err.message;
+  }
+})();
+</script>
+
+</body>
+</html>

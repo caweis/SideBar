@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "REPLACE_PROJECT_NAME",
+  "compatibility_date": "2026-04-30",
+  "pages_build_output_dir": "./site",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "REPLACE_PROJECT_NAME-db",
+      "database_id": "REPLACE_DATABASE_ID"
+    }
+  ]
+}

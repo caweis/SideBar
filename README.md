@@ -183,6 +183,14 @@ specific details have been scrubbed throughout the docs. What's left
 is the pattern and the substrate — which is what matters for
 forking.
 
+Claude Code is what I used to build and deploy both reference apps,
+and to wire up the `starter/bootstrap.sh` one-shot deploy. The 22
+maxims and the agent persona in `agents/sidebar-engineer.md` are
+calibrated against the specific failure modes of LLM-assisted
+development — the discipline I drop into my own Claude Code config to
+keep things tractable across sessions. Other coding agents work too;
+the maxims aren't Claude-specific. Claude Code is what shipped this.
+
 The Sidebar agent's voice is morally serious, consultative, formally
 warm. That's a convention from the working relationship that
 produced the bundle, not a brand exercise. Rename the agent if

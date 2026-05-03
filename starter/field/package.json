@@ -1,0 +1,12 @@
+{
+  "name": "sidebar-field",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Sidebar field-companion starter — offline-first execution notebook with E2E-encrypted journal on Cloudflare Pages + D1.",
+  "scripts": {
+    "dev": "wrangler pages dev ./site"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}

@@ -100,14 +100,15 @@ oss/
 │   └── PATTERNS.md                        ← cross-cutting design choices
 ├── skills/                                ← small copy-pasteable patterns
 │   ├── canonical-data-audit.md
-│   ├── cascade-audit-script.md            ← NEW · grep-based gap detector
+│   ├── cascade-audit-script.md
+│   ├── chronological-trip-flow.md         ← NEW · field-companion: order UI by trip phase, not category
 │   ├── cloudflare-email-routing-receive.md
 │   ├── d1-migration-log-drift.md
 │   ├── leaflet-teardown-on-rerender.md
 │   ├── mobile-vs-desktop-map-branching.md
 │   ├── mode-of-tuples-voting.md
 │   ├── per-poi-inline-map.md
-│   └── phase-clearance-gates.md           ← NEW · "previous section cleared by majority" pattern
+│   └── phase-clearance-gates.md
 ├── agents/
 │   └── sidebar-engineer.md                ← Claude Code agent persona
 └── starter/

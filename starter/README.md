@@ -13,12 +13,22 @@ chmod +x bootstrap.sh
 
 `bootstrap.sh` will:
 
-1. Prompt you for which app to deploy (`planning` / `field` / `both`) and a project base name
+1. Prompt you for which app to deploy (`planning` / `field` / `both`) and a project base name (default suggestion includes a random suffix to avoid collisions)
 2. Authenticate with Cloudflare (`wrangler login` if needed)
-3. For each chosen app: install wrangler, write `wrangler.jsonc` from the example, create the D1 database, apply migrations, deploy via `wrangler pages deploy`
-4. Print the URLs and instructions for configuring Cloudflare Access
+3. **Pre-flight check** — query your account's existing Pages projects and D1 databases; **abort with a clear error** if any of the names it's about to create already exist
+4. Show you exactly what's about to be created and require explicit `y` to proceed
+5. For each chosen app: install wrangler, write `wrangler.jsonc` from the example, create the D1 database, apply migrations, deploy via `wrangler pages deploy`
+6. Print the URLs and instructions for configuring Cloudflare Access
 
 If you'd rather do it manually, each app has its own README with the equivalent 5-step flow ([planning/](planning/README.md), [field/](field/README.md)).
+
+### Why the safety guards matter
+
+`wrangler pages deploy --project-name X` **silently overwrites an existing Pages project named X** (it publishes a new deployment that becomes the live version). If you typo'd a base name that matches one of your existing production projects, the deploy would replace your real app with this starter. The pre-flight check + confirmation prompt are the only thing protecting other deployments on the same account.
+
+The collision detector runs `wrangler pages project list` and `wrangler d1 list` and bails on a word-boundary match. It's deliberately conservative — false positives are recoverable (pick a different name); false negatives are not.
+
+If you've already deployed this starter once and want to re-run `./bootstrap.sh` to redeploy the same project, **delete the existing Pages project + D1 database first** (or do the redeploy manually with `wrangler pages deploy ./planning/site --project-name X` and skip the bootstrap). The collision check assumes "name exists = don't touch."
 
 ## What you get
 

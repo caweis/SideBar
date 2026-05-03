@@ -4,10 +4,16 @@
 #
 # Run from this directory:    ./bootstrap.sh
 # Requirements: node 18+, npm, a Cloudflare account.
+#
+# SAFETY: This script will refuse to deploy if a Pages project or D1
+# database with the chosen name already exists on your account, and
+# requires explicit y/N confirmation before any create/deploy step.
+# `wrangler pages deploy --project-name X` silently overwrites an
+# existing project X, so the collision check is the only thing
+# protecting other deployments on the same account.
 
 set -euo pipefail
 
-# Resolve to this script's directory regardless of where it's run from.
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 cd "$SCRIPT_DIR"
 
@@ -22,13 +28,13 @@ ok()   { printf "${G}✓${X} %s\n" "$*"; }
 warn() { printf "${Y}!${X} %s\n" "$*"; }
 die()  { printf "${R}✗${X} %s\n" "$*" >&2; exit 1; }
 
-# Portable sed -i (handles BSD sed on macOS).
 sedi() {
-  if sed --version >/dev/null 2>&1; then
-    sed -i "$@"
-  else
-    sed -i '' "$@"
-  fi
+  if sed --version >/dev/null 2>&1; then sed -i "$@"; else sed -i '' "$@"; fi
+}
+
+random_hex() {
+  openssl rand -hex 2 2>/dev/null \
+    || head -c 200 /dev/urandom | LC_ALL=C tr -dc 'a-f0-9' | head -c 4
 }
 
 # ─── prereqs ────────────────────────────────────────────────────────
@@ -45,7 +51,9 @@ case "$APP_CHOICE" in
   *) die "expected one of: planning, field, both" ;;
 esac
 
-read -rp "Project base name (lowercase, hyphens ok, e.g. 'my-trip'): " PROJECT_BASE
+DEFAULT_BASE="sidebar-demo-$(random_hex)"
+read -rp "Project base name [${DEFAULT_BASE}]: " PROJECT_BASE
+PROJECT_BASE="${PROJECT_BASE:-$DEFAULT_BASE}"
 [[ "$PROJECT_BASE" =~ ^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$ ]] \
   || die "project name must be 1-32 chars, lowercase letters/numbers/hyphens, start+end with alphanumeric"
 
@@ -56,6 +64,75 @@ if ! npx --yes wrangler@^3.90.0 whoami >/dev/null 2>&1; then
   npx --yes wrangler@^3.90.0 login
 fi
 ok "wrangler authenticated"
+
+# ─── enumerate planned resources + collision check ──────────────────
+declare -a PLANNED_PROJECTS=()
+declare -a PLANNED_DBS=()
+
+case "$APP_CHOICE" in
+  planning)
+    PLANNED_PROJECTS+=("${PROJECT_BASE}-planning")
+    PLANNED_DBS+=("${PROJECT_BASE}-planning-db")
+    ;;
+  field)
+    PLANNED_PROJECTS+=("${PROJECT_BASE}-field")
+    PLANNED_DBS+=("${PROJECT_BASE}-field-db")
+    ;;
+  both)
+    PLANNED_PROJECTS+=("${PROJECT_BASE}-planning" "${PROJECT_BASE}-field")
+    PLANNED_DBS+=("${PROJECT_BASE}-planning-db" "${PROJECT_BASE}-field-db")
+    ;;
+esac
+
+say "Pre-flight: checking your Cloudflare account for name collisions…"
+
+# Cache the wrangler list outputs once.
+PAGES_LIST="$(npx wrangler pages project list 2>/dev/null || true)"
+D1_LIST="$(npx wrangler d1 list 2>/dev/null || true)"
+
+# Word-boundary grep for the names. Imperfect — could false-positive
+# on substrings — but errs on the side of refusing rather than overwriting.
+collision_check() {
+  local needle="$1"
+  local haystack="$2"
+  printf '%s' "$haystack" | grep -qE "(^|[^a-zA-Z0-9-])${needle}([^a-zA-Z0-9-]|$)"
+}
+
+COLLISIONS=()
+for proj in "${PLANNED_PROJECTS[@]}"; do
+  if collision_check "$proj" "$PAGES_LIST"; then
+    COLLISIONS+=("Pages project '${proj}' already exists")
+  fi
+done
+for db in "${PLANNED_DBS[@]}"; do
+  if collision_check "$db" "$D1_LIST"; then
+    COLLISIONS+=("D1 database '${db}' already exists")
+  fi
+done
+
+if [ ${#COLLISIONS[@]} -gt 0 ]; then
+  printf "\n${R}✗ Aborting — collisions detected on your Cloudflare account:${X}\n"
+  for c in "${COLLISIONS[@]}"; do
+    printf "    - %s\n" "$c"
+  done
+  printf "\n  Bootstrap will not deploy on top of existing resources.\n"
+  printf "  Pick a different base name and re-run. The default suggestion\n"
+  printf "  includes a random suffix specifically to avoid this.\n\n"
+  exit 1
+fi
+
+ok "no collisions found"
+
+# ─── confirmation ───────────────────────────────────────────────────
+printf "\nAbout to create on your Cloudflare account:\n"
+for i in "${!PLANNED_PROJECTS[@]}"; do
+  printf "  • Pages project:  ${B}%s${X}\n" "${PLANNED_PROJECTS[$i]}"
+  printf "  • D1 database:    ${B}%s${X}\n" "${PLANNED_DBS[$i]}"
+done
+printf "\n"
+
+read -rp "Proceed? [y/N]: " CONFIRM
+[[ "$CONFIRM" =~ ^[Yy]([Ee][Ss])?$ ]] || die "aborted by user"
 
 # ─── deploy one app ─────────────────────────────────────────────────
 deploy_one() {
@@ -90,7 +167,8 @@ deploy_one() {
         | grep -oE '[Dd]atabase[_ ]?[Ii]d[[:space:]]*[=:][[:space:]]*"[^"]+"' \
         | head -1 \
         | sed -E 's/.*"([^"]+)".*/\1/')
-      [ -n "$db_id" ] || die "  could not parse database id from wrangler output:\n${create_output}"
+      [ -n "$db_id" ] || die "  could not parse database id from wrangler output:
+${create_output}"
       sedi "s/REPLACE_DATABASE_ID/${db_id}/g" wrangler.jsonc
       rm -f wrangler.jsonc.bak
       ok "  D1 ${db_name} → ${db_id}"

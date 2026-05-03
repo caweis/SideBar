@@ -61,7 +61,7 @@ External APIs (proxied, never direct from browser)
   └── Resend                                 ← weekly digest emails
 
 Cloudflare Access
-  └── WeisTribe policy · 5-household email allowlist
+  └── allowlist policy · fixed group of household emails
        └── Pages Functions read Cf-Access-Authenticated-User-Email + JWT
        └── Service worker passes through Access · doesn't break offline shell
 ```

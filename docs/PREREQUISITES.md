@@ -130,8 +130,8 @@ Set these in the Cloudflare dashboard (Pages → Settings → Environment
 variables, or `wrangler secret put`):
 
 - **`RESEND_API_KEY`** — for digest emails (Worker, not Pages)
-- **`ALPENELF_OPEN_METEO_KEY`** — for paid weather forecasts (rename to your
-  preference; reference accordingly in `functions/api/weather.js`)
+- **`OPEN_METEO_API_KEY`** — for paid weather forecasts (open-meteo's free
+  tier covers most personal-scale apps; only needed if you exceed it)
 - **`TICKETMASTER_API_KEY`** — for events
 - **`AWARD_SEARCH_KEY`** — if you proxy any paid award-flight engines
 - Any others your external proxies need

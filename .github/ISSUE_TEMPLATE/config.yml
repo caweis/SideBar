@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Read the docs first
+    url: https://github.com/caweis/SideBar#where-to-start
+    about: Most questions are answered in docs/METHOD.md, docs/ARCHITECTURE.md, or docs/COUPLING.md.

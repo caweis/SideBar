@@ -86,37 +86,70 @@ apps · Resend free tier 100/day for digests · domain ~$12/yr).
 
 ## Layout
 
-```
-oss/
-├── README.md                              ← you are here
-├── LICENSE                                ← PolyForm Noncommercial 1.0.0
-├── docs/
-│   ├── ARCHITECTURE.md                    ← Cloudflare Pages + D1 + Functions + Cron stack
-│   ├── PREREQUISITES.md                   ← Cloudflare account, D1, Access, Resend, env vars
-│   ├── DEPLOY.md                          ← wrangler, migrations, dev mode, common gotchas
-│   ├── METHOD.md                          ← 22 Maxims + memory ritual + plan-first
-│   ├── COUPLING.md                        ← two-phase trip pattern · planning ↔ execution handoff
-│   ├── DATA-MODEL.md                      ← schema · vote shapes · encryption boundary
-│   └── PATTERNS.md                        ← cross-cutting design choices
-├── skills/                                ← small copy-pasteable patterns
-│   ├── canonical-data-audit.md
-│   ├── cascade-audit-script.md
-│   ├── chronological-trip-flow.md
-│   ├── cloudflare-email-routing-receive.md
-│   ├── d1-migration-log-drift.md
-│   ├── leaflet-teardown-on-rerender.md
-│   ├── mobile-vs-desktop-map-branching.md
-│   ├── mode-of-tuples-voting.md
-│   ├── per-poi-inline-map.md
-│   ├── phase-clearance-gates.md
-│   ├── service-worker-shell-versioning.md ← NEW · "deployed but invisible" SW cache fix
-│   └── sql-like-underscore-wildcard.md    ← NEW · the migration that wipes more rows than you meant
-├── agents/
-│   └── sidebar-engineer.md                ← Claude Code agent persona
-└── starter/
-    ├── wrangler.jsonc.template
-    ├── functions/_shared/README.md
-    └── migrations/0001_initial.sql.template
+Every file below is a direct link.
+
+**Top level**
+
+- [`README.md`](README.md) — you are here
+- [`LICENSE`](LICENSE) — PolyForm Noncommercial 1.0.0
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — what's in scope, how to open a PR, squash-merge convention
+
+**[`docs/`](docs/)** — the prose
+
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Cloudflare Pages + D1 + Functions + Cron stack
+- [`docs/PREREQUISITES.md`](docs/PREREQUISITES.md) — Cloudflare account, D1, Access, Resend, env vars
+- [`docs/DEPLOY.md`](docs/DEPLOY.md) — wrangler, migrations, dev mode, common gotchas
+- [`docs/METHOD.md`](docs/METHOD.md) — Sidebar · the 22 Maxims + memory ritual + plan-first
+- [`docs/COUPLING.md`](docs/COUPLING.md) — two-phase trip pattern · planning ↔ execution handoff
+- [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md) — planning + field-companion schemas + coupling-handoff
+- [`docs/PATTERNS.md`](docs/PATTERNS.md) — cross-cutting design choices
+
+**[`skills/`](skills/)** — 11 copy-pasteable patterns, each one earned in production
+
+- [`canonical-data-audit.md`](skills/canonical-data-audit.md) — name the canonical/mirror relationship + drift detection
+- [`cascade-audit-script.md`](skills/cascade-audit-script.md) — grep-based gap detector for cascade gates
+- [`chronological-trip-flow.md`](skills/chronological-trip-flow.md) — order companion-app UI by trip phase, not category
+- [`cloudflare-email-routing-receive.md`](skills/cloudflare-email-routing-receive.md) — receive email at a custom domain via CF Email Routing → Worker
+- [`d1-migration-log-drift.md`](skills/d1-migration-log-drift.md) — when wrangler thinks migrations are unapplied that already ran
+- [`leaflet-teardown-on-rerender.md`](skills/leaflet-teardown-on-rerender.md) — embedded interactive widgets · stash on DOM, `.remove()` before innerHTML wipe
+- [`mobile-vs-desktop-map-branching.md`](skills/mobile-vs-desktop-map-branching.md) — embedded maps · branch at click time, native Maps app on phones
+- [`mode-of-tuples-voting.md`](skills/mode-of-tuples-voting.md) — multi-field correlated votes · mode of tuples, not per-field median
+- [`per-poi-inline-map.md`](skills/per-poi-inline-map.md) — long list of geocoded items · lazy-init map per item
+- [`phase-clearance-gates.md`](skills/phase-clearance-gates.md) — gate next section on majority-cleared, not first-vote-exists
+- [`service-worker-shell-versioning.md`](skills/service-worker-shell-versioning.md) — the "deployed but invisible" SW cache fix
+- [`sql-like-underscore-wildcard.md`](skills/sql-like-underscore-wildcard.md) — the migration that deletes more rows than you meant
+
+**[`agents/`](agents/)** — Claude Code persona
+
+- [`agents/sidebar-engineer.md`](agents/sidebar-engineer.md) — the engineer-agent that practices Sidebar
+
+**[`starter/`](starter/)** — runnable scaffold (one-shot deploy via [`bootstrap.sh`](starter/bootstrap.sh))
+
+- [`starter/README.md`](starter/README.md) — top-level walkthrough + the bootstrap flow + safety guards
+- [`starter/bootstrap.sh`](starter/bootstrap.sh) — interactive deploy script (planning / field / both)
+
+planning side · multi-household voting + coordination · ~700 lines
+
+- [`starter/planning/README.md`](starter/planning/README.md)
+- [`starter/planning/wrangler.jsonc.example`](starter/planning/wrangler.jsonc.example) · [`starter/planning/package.json`](starter/planning/package.json)
+- [`starter/planning/migrations/0001_initial.sql`](starter/planning/migrations/0001_initial.sql)
+- [`starter/planning/functions/_shared/auth.js`](starter/planning/functions/_shared/auth.js) · [`db.js`](starter/planning/functions/_shared/db.js) · [`respond.js`](starter/planning/functions/_shared/respond.js) · [`options.js`](starter/planning/functions/_shared/options.js)
+- [`starter/planning/functions/api/me.js`](starter/planning/functions/api/me.js) · [`dates.js`](starter/planning/functions/api/dates.js) · [`night-votes.js`](starter/planning/functions/api/night-votes.js) · [`activity.js`](starter/planning/functions/api/activity.js)
+- [`starter/planning/site/index.html`](starter/planning/site/index.html)
+
+field-companion side · offline-first · per-user E2E-encrypted journal · ~900 lines
+
+- [`starter/field/README.md`](starter/field/README.md)
+- [`starter/field/wrangler.jsonc.example`](starter/field/wrangler.jsonc.example) · [`starter/field/package.json`](starter/field/package.json)
+- [`starter/field/migrations/0001_initial.sql`](starter/field/migrations/0001_initial.sql)
+- [`starter/field/functions/_shared/auth.js`](starter/field/functions/_shared/auth.js) · [`db.js`](starter/field/functions/_shared/db.js) · [`respond.js`](starter/field/functions/_shared/respond.js)
+- [`starter/field/functions/api/me.js`](starter/field/functions/api/me.js) · [`trip.js`](starter/field/functions/api/trip.js) · [`catalog.js`](starter/field/functions/api/catalog.js) · [`completions.js`](starter/field/functions/api/completions.js) · [`journal.js`](starter/field/functions/api/journal.js) · [`user-encryption.js`](starter/field/functions/api/user-encryption.js)
+- [`starter/field/site/index.html`](starter/field/site/index.html) · [`sw.js`](starter/field/site/sw.js)
+
+**[`.github/`](.github/)** — issue + PR templates
+
+- [`.github/ISSUE_TEMPLATE/bug.md`](.github/ISSUE_TEMPLATE/bug.md) · [`question.md`](.github/ISSUE_TEMPLATE/question.md) · [`feedback.md`](.github/ISSUE_TEMPLATE/feedback.md) · [`config.yml`](.github/ISSUE_TEMPLATE/config.yml)
+- [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md)
 ```
 
 ## Where to start

@@ -106,6 +106,57 @@ A Pages Function in one repo, a CLI in another. Use a published package
 (npm), a generated JSON file in a shared S3 bucket, or just commit
 discipline.
 
+### Case D — Schema is the canonical, template hardcodes a literal copy
+
+The most insidious shape, because it doesn't *feel* like duplication
+when you write it. The DB has a column (`hotels.confirmation_number`,
+`hotels.arrival_date`); the template has the same value baked in
+literally:
+
+```html
+<!-- BAD · the value lives in two places · DB drift won't propagate -->
+<article class="stop-card" data-stop-id="gut_steinbach">
+  <div class="ribbon">May 13 – 16 · Bavaria</div>
+  <span>Conf · 649-5-SF-0201</span>
+</article>
+```
+
+The canonical is the schema; the template is a static mirror. When the
+DB value changes (the hotel reissues a confirmation, the dates shift),
+the template doesn't update because nothing on the deploy path knows
+to update it.
+
+**Fix:** strip the literal from the template; have JS read from the
+already-loaded `/api/trip` (or whatever endpoint exposes the
+canonical) and populate the placeholder:
+
+```html
+<article class="stop-card" data-stop-id="gut_steinbach">
+  <div class="ribbon" data-stop-ribbon>…</div>
+  <span data-stop-conf>Conf · …</span>
+</article>
+```
+
+```js
+// One IIFE, populates every stop card from the canonical source.
+const trip = await loadTrip();
+const byId = Object.fromEntries(trip.hotels.map(h => [h.id, h]));
+document.querySelectorAll('.stop-card[data-stop-id]').forEach(card => {
+  const h = byId[card.dataset.stopId];
+  if (!h) return;
+  card.querySelector('[data-stop-ribbon]').textContent = `${fmtDateRange(h.arrival_date, h.departure_date)} · ${region(h)}`;
+  card.querySelector('[data-stop-conf]').textContent = h.confirmation_number ? `Conf · ${h.confirmation_number}` : 'Conf · TBD';
+});
+```
+
+Now a `UPDATE hotels SET confirmation_number = ...` in D1 propagates to
+every consumer — the stop card, the chapter header, the printable
+handoff sheet — without a redeploy.
+
+The smell that surfaces this case: a schema column has changed (or
+been added) but the page still shows the old / a hardcoded value, and
+"deploying with no code change" doesn't fix it.
+
 ## When to apply
 
 - 2+ places declare the same data

@@ -101,14 +101,16 @@ oss/
 ├── skills/                                ← small copy-pasteable patterns
 │   ├── canonical-data-audit.md
 │   ├── cascade-audit-script.md
-│   ├── chronological-trip-flow.md         ← NEW · field-companion: order UI by trip phase, not category
+│   ├── chronological-trip-flow.md
 │   ├── cloudflare-email-routing-receive.md
 │   ├── d1-migration-log-drift.md
 │   ├── leaflet-teardown-on-rerender.md
 │   ├── mobile-vs-desktop-map-branching.md
 │   ├── mode-of-tuples-voting.md
 │   ├── per-poi-inline-map.md
-│   └── phase-clearance-gates.md
+│   ├── phase-clearance-gates.md
+│   ├── service-worker-shell-versioning.md ← NEW · "deployed but invisible" SW cache fix
+│   └── sql-like-underscore-wildcard.md    ← NEW · the migration that wipes more rows than you meant
 ├── agents/
 │   └── sidebar-engineer.md                ← Claude Code agent persona
 └── starter/

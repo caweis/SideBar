@@ -72,12 +72,49 @@
     font: inherit;
     color: inherit;
     transition: background 120ms;
+    position: relative;
   }
   .vote-card:hover { background: var(--tile-hover); }
   .vote-card.mine { background: var(--tile-mine); border-color: var(--accent); }
   .vote-card .label { font-weight: 600; margin-bottom: 4px; }
   .vote-card .meta { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
   .vote-card .tally { font-size: 0.85rem; color: var(--accent); }
+  .vote-card .you { position: absolute; top: 8px; right: 10px; color: #3a7a4a; font-weight: 700; }
+
+  /* Gamification primitives — see skills/gameify-the-convergence.md */
+  .phase-chips {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    margin: 12px 0 20px;
+    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.4px;
+  }
+  .phase-chip {
+    padding: 3px 10px; border-radius: 99px; border: 1px solid var(--line);
+    color: var(--muted); background: transparent; opacity: 0.65;
+    font-weight: 600; white-space: nowrap;
+  }
+  .phase-chip.active   { color: var(--accent); border-color: var(--accent); background: var(--tile); opacity: 1; }
+  .phase-chip.cleared  { color: #3a7a4a; border-color: #c8dfcd; background: #eaf3ec; opacity: 1; }
+  .phase-chip-arrow    { color: var(--line); }
+
+  .axis-context {
+    background: var(--tile); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    border-radius: 6px; padding: 12px 14px; margin: 12px 0 16px;
+    font-family: var(--mono); font-size: 0.85rem; letter-spacing: 0.2px;
+  }
+  .axis-context .score { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .axis-context .bar { font-size: 1.1rem; letter-spacing: 2px; color: var(--accent); font-weight: 700; }
+  .axis-context.cleared .bar { color: #3a7a4a; }
+  .axis-context .voted-line   { color: var(--ink); margin-top: 4px; font-family: var(--body); }
+  .axis-context .pending-line { color: var(--accent); margin-top: 2px; font-family: var(--body); }
+  .axis-context .label-key {
+    text-transform: uppercase; font-weight: 700; letter-spacing: 1px;
+    color: var(--muted); font-size: 0.7rem; margin-right: 8px;
+  }
+  .axis-context .pending-line .label-key { color: var(--accent); }
+  .axis-context .unlock {
+    margin-top: 8px; color: var(--accent); font-weight: 600;
+  }
+  .axis-context.cleared .unlock { color: #3a7a4a; }
 
   .combo-card {
     background: var(--tile);
@@ -130,8 +167,17 @@
 
 <div id="identity">loading…</div>
 
+<!-- Phase chip strip · mechanic 3 (level unlocks) — shows the whole game
+     board so the participant sees where this section sits in the chain. -->
+<div class="phase-chips" id="phase-chips"></div>
+
 <h2>Pick a date</h2>
 <p class="muted">One vote per household. Click a card to vote; click again to clear.</p>
+
+<!-- Per-axis context block · mechanics 1 (score), 2 (named players),
+     3 (unlock target). Hidden when the axis has cleared majority. -->
+<div class="axis-context" id="dates-context" hidden></div>
+
 <div class="vote-grid" id="dates"></div>
 
 <h2>Allocate nights across cities</h2>
@@ -195,8 +241,108 @@ async function refresh() {
   renderAll();
 }
 
+// --- Gamification helpers · see skills/gameify-the-convergence.md ---
+//
+// Single source of truth for the chain. Each phase is one decision axis;
+// downstream phases unlock sequentially as upstream ones reach majority.
+// In a real Sidebar app you'd extend this to all your axes; the starter
+// only voices `dates` because the date-vote section is the canonical
+// example. The chip strip + per-axis context block render off this list.
+const PHASE_CHAIN = [
+  { id: 'dates',   label: 'Dates',   getVotes: () => state.dateVotes,   nextLabel: 'cities' },
+  { id: 'cities',  label: 'Cities',  getVotes: () => [],                nextLabel: 'lodging'  }, // placeholder
+  { id: 'lodging', label: 'Lodging', getVotes: () => [],                nextLabel: null       }, // placeholder
+];
+
+const TOTAL_HOUSEHOLDS = 5; // mirror your real value · see skills/canonical-data-audit.md
+const MAJORITY = Math.ceil(TOTAL_HOUSEHOLDS / 2);
+
+function distinctHouseholds(votes) {
+  return new Set((votes || []).map(v => v.household_id).filter(Boolean));
+}
+function phaseCleared(votes)      { return distinctHouseholds(votes).size >= MAJORITY; }
+function phaseClearedCount(votes) { return distinctHouseholds(votes).size; }
+function pendingHouseholds(votes) {
+  const voted = distinctHouseholds(votes);
+  return state.households.filter(h => !voted.has(h.id));
+}
+function chainBlocker() {
+  return PHASE_CHAIN.find(p => !phaseCleared(p.getVotes())) || null;
+}
+function householdLabel(hh) { return hh.label || hh.id; }
+
+// Mechanic 1 · 5-segment ▰▱ score bar. Rendered in mono so segments
+// align identically across axes. Color flips green at majority.
+function scoreBar(count, total, isCleared) {
+  const filled = Math.max(0, Math.min(total, count));
+  const fillColor = isCleared ? '#3a7a4a' : 'var(--accent)';
+  return '<span class="bar" style="color:' + fillColor + '">' +
+    '▰'.repeat(filled) + '<span style="color:var(--line)">' + '▱'.repeat(total - filled) + '</span></span>';
+}
+
+// Mechanic 3 · sequential phase chip strip. Rendered as one row; cleared
+// chips fill green with ✓, the active blocker gets accent border, locked
+// chips render dim. Mirrors site/index.html#phaseProgress in the parent
+// app · same pattern.
+function renderPhaseChips() {
+  const root = document.getElementById('phase-chips');
+  if (!root) return;
+  const blocker = chainBlocker();
+  root.innerHTML = PHASE_CHAIN.map((p, i) => {
+    const cleared = phaseCleared(p.getVotes());
+    const isActive = !cleared && blocker && blocker.id === p.id;
+    const cls = cleared ? 'phase-chip cleared' : isActive ? 'phase-chip active' : 'phase-chip';
+    const tag = cleared ? p.label + ' ✓' : p.label;
+    const arrow = i < PHASE_CHAIN.length - 1
+      ? '<span class="phase-chip-arrow">→</span>'
+      : '';
+    return '<span class="' + cls + '">' + tag + '</span>' + arrow;
+  }).join('');
+}
+
+// Mechanics 1 + 2 + 3 in one block · visible score, named players
+// (voted + pending), unlock target. Hidden when this phase is cleared.
+function renderAxisContext(phaseId) {
+  const phase = PHASE_CHAIN.find(p => p.id === phaseId);
+  const root = document.getElementById(phaseId + '-context');
+  if (!phase || !root) return;
+  const votes = phase.getVotes();
+  const cleared = phaseCleared(votes);
+  if (cleared && phase.nextLabel) {
+    root.hidden = false;
+    root.classList.add('cleared');
+    root.innerHTML =
+      '<div class="score">' + scoreBar(phaseClearedCount(votes), TOTAL_HOUSEHOLDS, true) +
+      '<span class="muted">' + phaseClearedCount(votes) + ' of ' + TOTAL_HOUSEHOLDS +
+      ' households voted</span></div>' +
+      '<div class="unlock">✓ ' + phase.label + ' cleared · <strong>' + phase.nextLabel + '</strong> open next.</div>';
+    return;
+  }
+  if (cleared) { root.hidden = true; return; }
+  root.hidden = false;
+  root.classList.remove('cleared');
+  const have = phaseClearedCount(votes);
+  const remaining = Math.max(0, MAJORITY - have);
+  // Voted households (any vote on this axis · canonical with pending list)
+  const votedHHIds = new Set(votes.map(v => v.household_id).filter(Boolean));
+  const votedNames = state.households.filter(h => votedHHIds.has(h.id)).map(householdLabel);
+  const pendingNames = pendingHouseholds(votes).map(householdLabel);
+  const unlockLine = phase.nextLabel
+    ? '<div class="unlock">→ ' + remaining + ' more household' +
+      (remaining === 1 ? '' : 's') + ' to unlock <strong>' + phase.nextLabel + '</strong>.</div>'
+    : '';
+  root.innerHTML =
+    '<div class="score">' + scoreBar(have, TOTAL_HOUSEHOLDS, false) +
+    '<span><strong>' + have + '</strong> of ' + TOTAL_HOUSEHOLDS + ' households voted</span></div>' +
+    (votedNames.length ? '<div class="voted-line"><span class="label-key">voted</span>' + votedNames.join(' · ') + '</div>' : '') +
+    (pendingNames.length ? '<div class="pending-line"><span class="label-key">pending</span>' + pendingNames.join(' · ') + '</div>' : '') +
+    unlockLine;
+}
+
 function renderAll() {
   renderIdentity();
+  renderPhaseChips();
+  renderAxisContext('dates');
   renderDates();
   renderNights();
   renderActivity();
@@ -224,7 +370,12 @@ function renderDates() {
   document.getElementById('dates').innerHTML = state.dateOptions.map(opt => {
     const count = tally[opt.id] || 0;
     const mine = myVote === opt.id ? 'mine' : '';
+    // Mechanic 4 · personal recognition. The ✓ on the user's selected
+    // card distinguishes "the family hasn't decided" from "*I* haven't
+    // voted." Keep it small and silent at a glance.
+    const youMark = myVote === opt.id ? '<span class="you" aria-label="You voted on this">✓</span>' : '';
     return `<button class="vote-card ${mine}" data-axis="date" data-option="${opt.id}">
+      ${youMark}
       <div class="label">${opt.label}</div>
       <div class="meta">${opt.start} → ${opt.end}</div>
       <div class="tally">${count} household${count === 1 ? '' : 's'}</div>

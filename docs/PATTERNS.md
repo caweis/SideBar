@@ -19,6 +19,20 @@ OK), you face a choice:
 
 We chose (3). See `skills/canonical-data-audit.md`.
 
+## Gamification of group convergence
+
+Multi-participant coordination apps fail the same way: everyone has an
+opinion, nobody clicks. The fix is making the **state of each decision
+legible enough that the group closes it themselves**. Five mechanics —
+visible score, named players (voted + pending), phase gates as
+sequential level-unlocks, personal recognition, actionable items only
+— applied per axis, not just per app.
+
+Avoid streaks, leaderboards, badges, and game-y vocabulary in adult
+coordination contexts; use the mechanics, not the visual language. See
+`skills/gameify-the-convergence.md` for the full lens. The planning
+starter ships with all five wired into the date-vote section.
+
 ## Mode-of-tuples for indivisible package votes
 
 Votes that span multiple correlated dimensions (e.g. "split N nights

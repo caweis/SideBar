@@ -104,13 +104,14 @@ Every file below is a direct link.
 - [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md) — planning + field-companion schemas + coupling-handoff
 - [`docs/PATTERNS.md`](docs/PATTERNS.md) — cross-cutting design choices
 
-**[`skills/`](skills/)** — 11 copy-pasteable patterns, each one earned in production
+**[`skills/`](skills/)** — 12 copy-pasteable patterns, each one earned in production
 
 - [`canonical-data-audit.md`](skills/canonical-data-audit.md) — name the canonical/mirror relationship + drift detection
 - [`cascade-audit-script.md`](skills/cascade-audit-script.md) — grep-based gap detector for cascade gates
 - [`chronological-trip-flow.md`](skills/chronological-trip-flow.md) — order companion-app UI by trip phase, not category
 - [`cloudflare-email-routing-receive.md`](skills/cloudflare-email-routing-receive.md) — receive email at a custom domain via CF Email Routing → Worker
 - [`d1-migration-log-drift.md`](skills/d1-migration-log-drift.md) — when wrangler thinks migrations are unapplied that already ran
+- [`gameify-the-convergence.md`](skills/gameify-the-convergence.md) — five mechanics that turn group convergence into a legible game state (without slumping into badges or leaderboards)
 - [`leaflet-teardown-on-rerender.md`](skills/leaflet-teardown-on-rerender.md) — embedded interactive widgets · stash on DOM, `.remove()` before innerHTML wipe
 - [`mobile-vs-desktop-map-branching.md`](skills/mobile-vs-desktop-map-branching.md) — embedded maps · branch at click time, native Maps app on phones
 - [`mode-of-tuples-voting.md`](skills/mode-of-tuples-voting.md) — multi-field correlated votes · mode of tuples, not per-field median

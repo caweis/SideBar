@@ -197,6 +197,27 @@ esac
 
 printf "\n"
 ok "All done."
+
+# Quick tour of what just got deployed · the planning starter ships with
+# the five gamification mechanics from skills/gameify-the-convergence.md
+# pre-wired so the date-vote section reads as "the game state is the UI"
+# from first paint. New users get the pattern by example, not by docs.
+if [ "$APP_CHOICE" != "field" ]; then
+  cat <<EOF
+
+${B}What's gameified out of the box (planning starter):${X}
+
+  ${G}1${X} ${B}Show the score${X}      ▰▰▱▱▱  visible 5-segment progress bar
+  ${G}2${X} ${B}Name the players${X}    voted + pending household lists
+  ${G}3${X} ${B}Phase gates${X}         sequential chip strip with unlock targets
+  ${G}4${X} ${B}Personal recognition${X} ✓ on the user's chosen card
+  ${G}5${X} ${B}Actionable items only${X} locked axes don't render until they unlock
+
+  See ${B}skills/gameify-the-convergence.md${X} for the full lens · copy
+  the pattern to your other axes (cities, lodging, dinners, ...).
+EOF
+fi
+
 cat <<'EOF'
 
 Next steps:
@@ -213,5 +234,9 @@ Next steps:
 
   3. Read ../docs/METHOD.md and drop ../agents/sidebar-engineer.md
      into your .claude/agents/ directory for the agent persona.
+
+  4. Tune the gamification mechanics for your axes — see
+     ../skills/gameify-the-convergence.md and the wired example in
+     planning/site/index.html (search for "gamification primitives").
 
 EOF

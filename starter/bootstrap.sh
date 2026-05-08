@@ -215,6 +215,18 @@ ${B}What's gameified out of the box (planning starter):${X}
 
   See ${B}skills/gameify-the-convergence.md${X} for the full lens · copy
   the pattern to your other axes (cities, lodging, dinners, ...).
+
+${B}Flight-search engines pre-wired (planning starter):${X}
+
+  ${B}Awards${X}  seats.aero · point.me · AwardFares · PointsYeah
+  ${B}Cash${X}    Google Flights · ITA Matrix · Skyscanner · Kayak · Going · Hopper
+
+  All ten share one form (origin / via / dest / dates / pax / cabin) and
+  one helper: ${B}buildFlightUrl(engine, params)${X} in
+  ${B}site/flight-engines.js${X}. Six support pre-filled deep links;
+  four (ITA, Going, Hopper, plus a Skyscanner multi-city corner case)
+  land on the engine's form. Add your own engine in two lines: one
+  switch case in ${B}buildFlightUrl${X}, one entry in ${B}ENGINES${X}.
 EOF
 fi
 

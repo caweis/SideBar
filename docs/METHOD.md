@@ -122,6 +122,15 @@ end-to-end." 🟡 = "I shipped it but haven't manually verified," or
 "I see a real risk." 🔴 = "Known broken." Forces the agent to
 distinguish between verified work and assumed work.
 
+The truthfulness obligation extends to **the prose around the
+stoplight**, not just the colored emoji rows. A 🟢 100% chart
+sitting under a sentence that overstates what was achieved is still
+a Maxim 12 violation. Closing flourishes are the highest-temptation
+moment for overclaim — work is fresh, dopamine is high, language
+drifts toward "transferable" / "proven" / "validated" when the
+honest verb is "articulated." See [Honest Reporting](#honest-reporting)
+below for the discipline that backstops this maxim.
+
 **Maxim 13 · Big Brother Protocol** · Code that compiles. Commit
 messages that list what changed structurally. The agent reports facts a
 reviewer can use without re-reading the diff.
@@ -139,6 +148,121 @@ or strong preference) and the **How to apply** (when this rule kicks in).
 Mirror to whatever cross-agent backup files exist (`decisions.md`,
 Obsidian vault, etc.) so other agents inherit the lesson. Iterate
 ruthlessly until the repeat-mistake rate drops.
+
+---
+
+## Honest Reporting
+
+A discipline that backstops Maxim 12. Earned in production: an agent
+closed a session that had legitimately shipped good work with the
+sentence *"the framing has now formally graduated from a project-only
+decision to a transferable engineering pattern with a public canonical
+artifact · proving the lens generalizes."* The work was real. The
+sentence was not — generalization is a property of *use by people
+other than the author*, and zero non-author uses had occurred. A
+council of independent advisors caught the overclaim; the lesson is
+captured here so the same trap doesn't reset every session.
+
+### The two-event test for transfer claims
+
+A pattern is "transferable" only after two distinct events have
+occurred:
+
+1. **Author articulation event** — the lens / pattern / skill exists
+   in legible, license-clear, extractable form.
+2. **Non-author use event** — at least one practitioner who is *not*
+   the original author has applied the pattern to a substrate that is
+   *not* the original codebase, and reported back.
+
+If only event 1 has happened, the work is real but the verb is
+**articulated**, not **transferred**. Most "reusable patterns"
+shipped to public repos die at exactly this gap — published, never
+read, never reused. Don't paper over the gap with verb choice.
+
+### Validation language requires validation evidence
+
+Each of these words is a claim about a future event:
+
+| Word | Implies |
+|---|---|
+| `proven` | Independent reproduction has occurred |
+| `transferable` | At least one transfer has occurred |
+| `generalizes` | The pattern has been applied to a non-original substrate |
+| `validated` | A/B comparison or controlled test happened |
+| `battle-tested` | Multi-substrate production use over time |
+
+Without that evidence, downgrade to **articulation language**. The
+honest substitutions:
+
+| ❌ Overclaim | ✓ Honest |
+|---|---|
+| `proven to generalize` | `articulated in a form that could generalize` |
+| `transferable engineering pattern` | `publicly-nameable framing` |
+| `the lens generalizes` | `the lens has hardened from tacit knowledge into legible text` |
+| `shipped a transferable pattern` | `extracted the pattern into a public skill` |
+| `validated across teams` | `articulated; multi-team validation pending` |
+| `the meaningful move was transfer` | `the meaningful move was articulation` |
+
+### The one-substrate / multi-substrate gate
+
+A skill extracted from one production codebase is a **hypothesis**,
+not a pattern. Skills filed in `skills/` should either:
+
+- Show evidence of multi-substrate validation in the body, OR
+- Disclose explicitly in the front-matter / opening callout that
+  this is one-substrate work and multi-substrate evidence is pending.
+
+The former is rare and earned. The latter is honest. Either is fine.
+Pretending a one-substrate hypothesis is multi-substrate-validated
+is the trap Maxim 12 was sharpened to catch.
+
+### Length over false confidence
+
+The honest version of an overclaiming closing line is usually one
+more sentence:
+
+> "Whether it does generalize will be measured by third-party use,
+> which has not yet occurred."
+
+One sentence is cheap. False confidence is expensive. **Trade for
+length every time.**
+
+### Diagnostic: the three-words-for-a-bug-class test
+
+When a user describes a problem in three words and the description
+exactly matches the failure mode of a known anti-pattern, that's a
+diagnostic phrase worth filing. Two examples that earned their
+keep:
+
+- *"It works when I refresh again"* → service-worker stale-while-
+  revalidate caching state-mutable data.
+- *"The English doesn't make sense"* → progress copy with modal
+  verbs around counts ("X of N households need to vote") creating
+  ambiguity about which side of the fraction is achieved.
+
+Keeping a running list of these phrases in your project's
+preferences/anti-patterns memory is cheap and pays out every time
+a user reports a bug whose three-word description matches.
+
+### Closing-summary checklist
+
+Before you ship a session-end summary:
+
+- [ ] Stoplight chart rows are individually truthful (verified vs
+      shipped-but-not-verified vs known-broken).
+- [ ] Prose AROUND the chart is also truthful — no validation verbs
+      without validation evidence.
+- [ ] Tier 2/3 candidates from this session are flagged with their
+      one-substrate gating, not silently promoted.
+- [ ] Closing flourish was either cut or is the honest version with
+      one more sentence of caveat.
+- [ ] Any third-party-dependent claim ("transferable," "generalizes,"
+      "proven") has been downgraded to articulation language unless
+      a non-author use event has actually occurred.
+
+If one of these fails, the summary needs another pass before it
+ships. The work isn't worse for being described accurately; the
+work is better-served by description that matches the evidence.
 
 ---
 

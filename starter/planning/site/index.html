@@ -139,6 +139,33 @@
   .leading { margin-top: 12px; padding-top: 8px; border-top: 1px dashed var(--line); font-size: 0.9rem; }
   .leading .muted { margin-left: 4px; }
 
+  /* Flight-search engine cluster · canonical pattern from flight-engines.js */
+  .fs-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .fs-form label { display: flex; flex-direction: column; gap: 2px; font-size: 0.85rem; color: var(--muted); }
+  .fs-form input, .fs-form select {
+    padding: 6px 8px; font: inherit;
+    border: 1px solid var(--line); border-radius: 4px; background: var(--bg);
+  }
+  .fs-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+  .fs-group {
+    font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.5px;
+    text-transform: uppercase; color: var(--muted); margin-right: 6px;
+  }
+  .fs-btn {
+    padding: 5px 12px; font-size: 0.85rem;
+    background: var(--tile); border: 1px solid var(--line); border-radius: 4px;
+    color: var(--ink); text-decoration: none; cursor: pointer;
+    font-family: inherit;
+  }
+  .fs-btn:hover { background: var(--tile-hover); border-color: var(--accent); }
+  .fs-btn.dim { opacity: 0.65; }
+  .fs-btn.dim:hover { opacity: 1; }
+
   #activity { list-style: none; padding: 0; margin: 0; }
   #activity li {
     display: grid; grid-template-columns: 140px 1fr auto auto;
@@ -184,6 +211,49 @@
 <p class="muted">Multi-field vote — each household submits a full tuple. The leading allocation is the most common tuple across households (mode of tuples, not per-field median).</p>
 <div id="nights"></div>
 
+<!-- Flight-search engine cluster · canonical buildFlightUrl pattern.
+     Each <a data-engine="X"> has its href dynamically rewritten by
+     refreshFlightSearchHrefs(getParams) on every form change.
+     Engines whose deepLinks=false (ITA, Going, Hopper) are visually
+     dimmed because they only land on a search form, not a result page.
+     See site/flight-engines.js for URL templates and notes per engine. -->
+<h2>Search award seats &amp; cash</h2>
+<p class="muted">One form, every engine. Award engines pull live award inventory; cash engines link out to commercial OTAs. <code>flight-engines.js</code> ships ten engines pre-wired — add your own by extending the catalog.</p>
+
+<div class="fs-form">
+  <label>From <input id="fsFrom" type="text" value="EWR" maxlength="4" style="text-transform:uppercase"></label>
+  <label>Via (optional) <input id="fsVia" type="text" value="" maxlength="4" placeholder="—" style="text-transform:uppercase"></label>
+  <label>To <input id="fsTo" type="text" value="MUC" maxlength="4" style="text-transform:uppercase"></label>
+  <label>Depart <input id="fsDepart" type="date" value="2027-07-24"></label>
+  <label>Return <input id="fsReturn" type="date" value="2027-08-02"></label>
+  <label>People <input id="fsPax" type="number" min="1" max="9" value="2"></label>
+  <label>Cabin
+    <select id="fsCabin">
+      <option value="economy">Economy</option>
+      <option value="premium">Premium Economy</option>
+      <option value="business" selected>Business</option>
+      <option value="first">First</option>
+    </select>
+  </label>
+</div>
+
+<div class="fs-row" id="fsAwardRow">
+  <span class="fs-group">Awards:</span>
+  <a class="fs-btn" data-engine="seats"      target="_blank" rel="noopener">seats.aero ↗</a>
+  <a class="fs-btn" data-engine="pointme"    target="_blank" rel="noopener">point.me ↗</a>
+  <a class="fs-btn" data-engine="awardfares" target="_blank" rel="noopener">AwardFares ↗</a>
+  <a class="fs-btn" data-engine="pointsyeah" target="_blank" rel="noopener">PointsYeah ↗</a>
+</div>
+<div class="fs-row" id="fsCashRow">
+  <span class="fs-group">Cash:</span>
+  <a class="fs-btn"     data-engine="google"     target="_blank" rel="noopener">Google Flights ↗</a>
+  <a class="fs-btn dim" data-engine="ita"        target="_blank" rel="noopener" title="ITA Matrix doesn't honor URL params · lands on form">ITA Matrix ↗</a>
+  <a class="fs-btn"     data-engine="skyscanner" target="_blank" rel="noopener">Skyscanner ↗</a>
+  <a class="fs-btn"     data-engine="kayak"      target="_blank" rel="noopener">Kayak ↗</a>
+  <a class="fs-btn dim" data-engine="going"      target="_blank" rel="noopener" title="Destination-page only · no per-search URL">Going ↗</a>
+  <a class="fs-btn dim" data-engine="hopper"     target="_blank" rel="noopener" title="Web product is a landing page · no per-search URL">Hopper ↗</a>
+</div>
+
 <h2>Recent activity</h2>
 <ul id="activity"></ul>
 
@@ -194,6 +264,33 @@
 </main>
 
 <script type="module">
+// Canonical flight-search engines · 10 award + cash sites pre-wired with
+// their URL deep-link templates. Edit site/flight-engines.js to add your
+// own engines — each new engine is one switch case + one ENGINES entry.
+import { buildFlightUrl, refreshFlightSearchHrefs } from './flight-engines.js';
+
+function getFlightSearchParams() {
+  return {
+    from: (document.getElementById('fsFrom')?.value || 'EWR').toUpperCase().trim(),
+    via:  (document.getElementById('fsVia')?.value  || '').toUpperCase().trim(),
+    to:   (document.getElementById('fsTo')?.value   || 'MUC').toUpperCase().trim(),
+    depart: document.getElementById('fsDepart')?.value || '2027-07-24',
+    ret:    document.getElementById('fsReturn')?.value || '2027-08-02',
+    pax:    parseInt(document.getElementById('fsPax')?.value, 10) || 1,
+    cabin:  document.getElementById('fsCabin')?.value || 'business',
+  };
+}
+function refreshSearchHrefs() {
+  refreshFlightSearchHrefs(getFlightSearchParams());
+}
+// Re-run on every form change · cheap (≤10 anchors) and avoids stale hrefs.
+['fsFrom','fsVia','fsTo','fsDepart','fsReturn','fsPax','fsCabin'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', refreshSearchHrefs);
+  document.getElementById(id)?.addEventListener('change', refreshSearchHrefs);
+});
+// Initial paint.
+refreshSearchHrefs();
+
 const state = {
   me: null,
   name: null,

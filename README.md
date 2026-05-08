@@ -99,7 +99,7 @@ Every file below is a direct link.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Cloudflare Pages + D1 + Functions + Cron stack
 - [`docs/PREREQUISITES.md`](docs/PREREQUISITES.md) — Cloudflare account, D1, Access, Resend, env vars
 - [`docs/DEPLOY.md`](docs/DEPLOY.md) — wrangler, migrations, dev mode, common gotchas
-- [`docs/METHOD.md`](docs/METHOD.md) — Sidebar · the 22 Maxims + memory ritual + plan-first
+- [`docs/METHOD.md`](docs/METHOD.md) — Sidebar · the 22 Maxims + memory ritual + plan-first + honest-reporting discipline (two-event test for transfer claims, honest-substitutions table, closing-summary checklist)
 - [`docs/COUPLING.md`](docs/COUPLING.md) — two-phase trip pattern · planning ↔ execution handoff
 - [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md) — planning + field-companion schemas + coupling-handoff
 - [`docs/PATTERNS.md`](docs/PATTERNS.md) — cross-cutting design choices
@@ -136,7 +136,7 @@ planning side · multi-household voting + coordination · ~700 lines
 - [`starter/planning/migrations/0001_initial.sql`](starter/planning/migrations/0001_initial.sql)
 - [`starter/planning/functions/_shared/auth.js`](starter/planning/functions/_shared/auth.js) · [`db.js`](starter/planning/functions/_shared/db.js) · [`respond.js`](starter/planning/functions/_shared/respond.js) · [`options.js`](starter/planning/functions/_shared/options.js)
 - [`starter/planning/functions/api/me.js`](starter/planning/functions/api/me.js) · [`dates.js`](starter/planning/functions/api/dates.js) · [`night-votes.js`](starter/planning/functions/api/night-votes.js) · [`activity.js`](starter/planning/functions/api/activity.js)
-- [`starter/planning/site/index.html`](starter/planning/site/index.html)
+- [`starter/planning/site/index.html`](starter/planning/site/index.html) · [`flight-engines.js`](starter/planning/site/flight-engines.js) (10 award + cash search engines pre-wired with deep-link URL templates)
 
 field-companion side · offline-first · per-user E2E-encrypted journal · ~900 lines
 

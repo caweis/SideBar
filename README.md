@@ -23,6 +23,15 @@ different data shapes. They share a substrate and a method, but they
 don't share a UI. See [`docs/COUPLING.md`](docs/COUPLING.md) for the
 two-phase pattern that ties them together.
 
+> **Latest release · [v0.3.1](https://github.com/caweis/SideBar/releases/tag/v0.3.1)** (May 2026)
+> Maxim 12 sharpened with an Honest Reporting discipline (two-event test
+> for transfer claims, honest-substitutions table, closing-summary
+> checklist) plus a 10-engine flight-search starter with deep-link URL
+> templates for seats.aero · point.me · AwardFares · PointsYeah · Google
+> Flights · ITA Matrix · Skyscanner · Kayak · Going · Hopper.
+> [Full changelog](https://github.com/caweis/SideBar/releases) · prior
+> releases v0.3.0, v0.2.1, v0.2.0, v0.1.0.
+
 The method is called **Sidebar**, named for the conversation that
 actually happens off to the side of the main meeting — where, in any
 honest family, the real decisions get made. The same protocol runs
@@ -43,17 +52,30 @@ What you're getting:
   ([`docs/DEPLOY.md`](docs/DEPLOY.md))
 - The **engineering method** — 22 Maxims, audit-before-write discipline,
   session memory ritual, plan-mode default, mode-of-tuples voting,
-  canonical-data discipline, phase-clearance gates
+  canonical-data discipline, phase-clearance gates, plus the
+  **Honest Reporting** discipline added in v0.3.1
   ([`docs/METHOD.md`](docs/METHOD.md))
 - The **two-phase trip pattern** — how to split planning from execution,
   one-way data handoff, deconfliction via multi-trip schema
   ([`docs/COUPLING.md`](docs/COUPLING.md))
-- A library of **skills** — small, copy-pasteable patterns the project
-  taught us along the way ([`skills/`](skills/))
+- A library of **12 skills** — small, copy-pasteable patterns the project
+  taught us along the way, each one earned in one production substrate
+  ([`skills/`](skills/))
+- The **gamification mechanics** for multi-household convergence — five
+  visible game-state surfaces (score bar, named players, phase gates as
+  level-unlocks, personal recognition, actionable items only) wired into
+  the planning starter as the canonical example
+  ([`skills/gameify-the-convergence.md`](skills/gameify-the-convergence.md))
+- The **flight-search engine catalog** — ten award + cash sites
+  pre-wired with deep-link URL templates, single-helper API, single-form
+  driver, drop-in extensible
+  ([`starter/planning/site/flight-engines.js`](starter/planning/site/flight-engines.js))
 - A **Claude Code agent** persona — the *Sidebar engineer* — that bundles
   the method into a single file you can drop into `.claude/agents/`
   ([`agents/sidebar-engineer.md`](agents/sidebar-engineer.md))
-- A minimal **starter** layout you can clone ([`starter/`](starter/))
+- A **runnable starter** with one-shot deploy via interactive
+  `bootstrap.sh`, safety-guards on Cloudflare account collisions, and
+  both planning + field starter scaffolds ([`starter/`](starter/))
 
 ## Who this is for
 
@@ -83,6 +105,217 @@ apps · Resend free tier 100/day for digests · domain ~$12/yr).
 - **A typed schema validator / ORM.** Everything is plain SQL + plain JS.
   Add Drizzle / Prisma / Zod if your scale or team demands it; the
   reference implementation deliberately doesn't.
+
+## The 22 Maxims at a glance
+
+The full text + reasoning lives in [`docs/METHOD.md`](docs/METHOD.md).
+Headers only here, grouped by phase:
+
+**Phase 1 — Before You Act**
+
+1. Announce the Maxim · 2. Audit Before You Write · 3. Work in Dependency
+Order · 16. Plan Mode Default · 17. Subagent Strategy
+
+**Phase 2 — How You Build**
+
+4. Canonical Data · 5. Data Cascades · 6. Wire In Every Data Source
+· 7. Always Update the Database · 8. Privacy, Security, Sound Engineering
+by Design · 18. Demand Elegance (Balanced) · 22. Constant Improvement,
+Not Just Bug Squashing
+
+**Phase 3 — How You Deliver**
+
+9. Fixes Never Break · 10. Platform Parity · 11. Commit After Every
+Action · 15. Test After Every Build · 19. Verification Before Done
+· 20. Autonomous Bug Fixing
+
+**Phase 4 — How You Communicate**
+
+12. Stoplight Charts (sharpened in v0.3.1 to cover prose, not just
+emoji rows) · 13. Big Brother Protocol · 14. Context Bar
+
+**Phase 5 — After Every Action**
+
+21. Self-Improvement Loop
+
+Every maxim is a rule the author wrote down because they kept getting it
+wrong until they did. The 22 numbers aren't sequential — they accreted
+over the project as new failure modes surfaced. Keeping the original
+numbers preserves the audit trail.
+
+## Quick start (15 minutes)
+
+If you have a Cloudflare account already, the bootstrap script does the
+rest. Reference path:
+
+```bash
+# 1. Clone
+git clone https://github.com/caweis/SideBar.git ~/sidebar && cd ~/sidebar
+
+# 2. Run the interactive bootstrap (asks: planning / field / both)
+cd starter && ./bootstrap.sh
+
+# 3. Open the deployed URL the script prints, e.g.
+#    https://my-planning.pages.dev
+#    The app sees you as 'anonymous@local' until step 4.
+
+# 4. (One-time) Configure Cloudflare Access on the deployed Pages project:
+#    dash.cloudflare.com → Access → Applications → Add an Application
+#    (self-hosted) pointing at <project>.pages.dev. Attach a policy with
+#    the email(s) you want gated in. Sidebar reads identity from the
+#    Cf-Access-Authenticated-User-Email header — no auth library needed.
+
+# 5. (Optional) Add a custom domain in Pages → Custom domains. ~$12/yr
+#    for the domain at any registrar; Cloudflare doesn't charge per app.
+```
+
+The bootstrap script has safety guards — it refuses to proceed if a
+Cloudflare Pages project or D1 database with the chosen name already
+exists on your account, and asks `y/N` confirmation before each
+create/deploy step. (`wrangler pages deploy --project-name X` silently
+overwrites existing projects, which is the bug the safety check exists
+to prevent.) Full walkthrough in
+[`starter/README.md`](starter/README.md).
+
+## What it actually does (a 90-second walkthrough)
+
+A user opens the planning portal. Cloudflare Access has already
+verified their email; the app sees `Cf-Access-Authenticated-User-Email`
+in the request header and treats that as identity. They click their
+household name in the chooser bar (one-time setup) and now their votes
+are recorded against that household, not their individual address.
+
+The first section is a date vote. Multiple date ranges are listed —
+some pre-seeded by the author, others proposed by family members.
+Each card shows a `▰▰▱▱▱` score bar with the count of households who've
+voted, the names of the households who voted (so the user sees who's
+in), and a `pending` row in accent color naming the households who
+haven't voted yet (so the user sees who's owed). The user clicks their
+preferred range. Their household's vote is recorded; if they click a
+different range, the radio-style indicator switches with one
+confirmation; if they click the same range twice, nothing happens
+(safe-tap pattern, prevents accidental toggles); if they want to
+clear, there's an explicit "Clear my vote" link with its own confirm.
+
+Below the date section, all downstream sections (cities, lodging,
+dinners, routes, day-by-day) render as locked cards — same
+visual-language phase-context-card showing the chain progress and
+saying "awaiting dates · 2 of 3 households voted." Once dates clears
+majority, the next section unlocks, and so on. The chain is sequential
+on purpose: cities depend on dates, lodging depends on cities, dinners
+depend on lodging. Each unlock is a small celebration moment.
+
+Once a week, every household receives a weekly digest email through
+Resend (sent by a Cloudflare Cron Worker). The email mirrors the SPA's
+gamification: chain chip strip up top, score bar per axis, voted +
+pending households named, ✓ / · personal achievement row, "1 more
+household to unlock cities" call to action. Same five mechanics, second
+surface form.
+
+When the trip actually happens, the *field companion* opens. Same
+substrate, different UI, different rhythm. Per-stop offline-first
+pages, encrypted personal journal entries the operator can't read,
+photo-gallery deep-links, weather. The handoff between the two apps
+is described in [`docs/COUPLING.md`](docs/COUPLING.md).
+
+## Cost breakdown
+
+Roughly $5/month total at household scale. Line items:
+
+| Service | Free tier covers | Cost when exceeded |
+|---|---|---|
+| Cloudflare Pages | Unlimited bandwidth · 500 builds/mo | n/a — bandwidth never charged |
+| Cloudflare Pages Functions | 100k requests/day | $5 / 10M requests beyond |
+| Cloudflare D1 | 5M rows read + 100k written / day | $0.75 / 1M rows read |
+| Cloudflare Workers (Cron) | 100k invocations/day | $5 / 10M beyond |
+| Cloudflare Access | First 50 users free | $3/user/mo beyond 50 |
+| Resend (digests) | 100 emails/day | $20/mo for 50k/mo |
+| Domain | n/a | ~$12/yr at any registrar |
+
+For a 5-household, 11-person planning app sending one weekly digest,
+no line item exceeds free tier. The "$5/month" figure quoted
+elsewhere in this README is the optional Cloudflare Workers Paid plan
+($5 flat) — recommended once you're in production because it removes
+the daily-cap cliff edge and gives you a predictable upper bound. The
+domain itself is ~$1/month amortized. The actual monthly cost in
+production is therefore $5 (Workers Paid) + ~$1 (domain) ≈ **$6/month**;
+the README rounds down to $5 because that's the line you're committing
+to monthly. Below household scale, free tier alone covers everything
+and the only annual line item is the domain.
+
+What this stack deliberately does NOT include: an observability
+vendor (Datadog / Sentry / Honeycomb), an auth library (Clerk / Auth0
+/ NextAuth), a typed-DB layer (Prisma / Drizzle), a monitoring SaaS,
+a queue (other than D1 itself), or a third-party email service beyond
+Resend. Each of those is a real product for real reasons. None are
+needed at household scale.
+
+## Production reality
+
+The two reference apps run behind Cloudflare Access for a fixed,
+allowlisted group of households. Concrete numbers:
+
+- **Planning portal** · ~6,800-line single-file SPA · ~17 D1 tables
+  · 5 households / 11 people · multi-month convergence on dates,
+  cities, lodging, dinners, routes, day-by-day · weekly Sunday-evening
+  digest cron · running for ~6 months pre-trip
+- **Field companion** · ~4,000-line single-file SPA · 17 D1 tables ·
+  per-user E2E-encrypted journal (PBKDF2 200k + AES-GCM 256, the
+  passphrase never leaves the browser) · offline-first via service
+  worker · Resend "weekly health" cron during trip · runs ~3 weeks
+  including travel days
+
+Both apps share the `_shared/` primitives (auth helper that reads the
+Cf-Access header, D1 binding wrapper, JSON-response helper, options
+catalog). The skills in [`skills/`](skills/) come out of writing those
+two apps and noticing the same patterns in both.
+
+A frequently-asked question: *"is this stack production-grade?"* —
+the honest answer is *"it serves real households on real trips
+through real cell-service dead zones, with these patterns and these
+trade-offs, at this scale."* It is not a hyperscale stack; it is not
+a typed-end-to-end stack; it does not have an SLO or a 24×7 on-call.
+That is appropriate for the workload. Above household scale, your
+mileage will vary; the patterns may still apply but the substrate
+choices probably won't.
+
+## Honest adoption status
+
+Per the **Honest Reporting** discipline shipped in v0.3.1
+([`docs/METHOD.md` → Honest Reporting](docs/METHOD.md#honest-reporting)),
+this section names what is and isn't true about how widely this bundle
+has been used.
+
+**What's true:**
+- Two production apps run from this method (the sibling planning + field
+  apps described above), both authored by the same individual
+- The patterns in `skills/` were each extracted from one or both of those
+  two apps after surviving multiple iterations of real use
+- The bundle has been articulated into legible, license-clear, publicly-
+  accessible markdown and starter code, including a runnable bootstrap
+  script that has been tested end-to-end against a fresh Cloudflare
+  account
+- The `gameify-the-convergence` skill (v0.3.0) and the flight-engine
+  catalog (v0.3.1) are the most recent extractions; both are wired into
+  the planning starter as live canonical examples
+
+**What's not yet true:**
+- *Zero non-author production deployments are recorded as of v0.3.1.*
+  The bundle has been published, not adopted. Articulation event has
+  occurred; transfer event has not.
+- The skills are therefore **hypotheses** about what's transferable,
+  not validated patterns. Each one is earned in one substrate. They
+  may generalize; they have not been measured against a second.
+- No one outside the original author has filed a `gameify-the-convergence`
+  refactor against their own coordination app, opened a PR extending
+  the anti-patterns list, or reported the bundle saved them an hour
+  on a Sunday.
+
+If you fork this and ship something — even a prototype — please open
+an Issue on the repo. That feedback is what would turn one-substrate
+hypotheses into multi-substrate validated patterns. Until then the
+Honest Reporting discipline obliges this section to say: *articulated
+in a form that could generalize · transfer pending.*
 
 ## Layout
 

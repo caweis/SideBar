@@ -86,6 +86,32 @@ Three-tier strategy:
 `SHELL_VERSION` constant bumped on shell-structure changes invalidates
 old caches on the next `activate` event.
 
+## Pointer-not-storage for physical NFC tags
+
+A tag attached to a physical object — a checked bag, an instrument case,
+equipment that travels — needs to give a stranger who finds it a way to
+reach the owner. The lazy version writes phone + email + URL onto the
+tag itself. Two failures: iOS background scanning only fires on the
+**first** NDEF record (records 2+ are dead weight from the tap-to-open
+standpoint, but still **fully readable by any NFC inspector app** — so
+PII baked into the silicon leaks even though it never fires on tap).
+And any time those values change you have to re-write every tag you
+ever wrote.
+
+URL on the tag, contact on the page. The tag is a pointer; the identity
+lives in env vars on a small Cloudflare Worker that server-renders the
+contact page and handles an optional location-share POST → email the
+owner via Resend. The cheap thing (the silicon) is permanent. The
+expensive thing (your identity, your phone, your email) is mutable and
+lives at the URL.
+
+See `skills/nfc-finder-tag.md` for the five load-bearing decisions —
+URL not vCard, single record not multi-record, paid forwarder over
+Google Voice (3-6 month inactivity reclaim is real for sparse-use
+numbers), `OWNER_PUBLIC_EMAIL` separated from `OWNER_EMAIL` for the
+kill-switch property, and no WhatsApp button on a virtual number
+because `wa.me/<virtualnumber>` silently fails.
+
 ## Last-write-wins household votes
 
 Schema-level decision (see `docs/DATA-MODEL.md`). All votes keyed by

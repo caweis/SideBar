@@ -59,7 +59,7 @@ What you're getting:
 - The **two-phase trip pattern** — how to split planning from execution,
   one-way data handoff, deconfliction via multi-trip schema
   ([`docs/COUPLING.md`](docs/COUPLING.md))
-- A library of **12 skills** — small, copy-pasteable patterns the project
+- A library of **13 skills** — small, copy-pasteable patterns the project
   taught us along the way, each one earned in one production substrate
   ([`skills/`](skills/))
 - The **gamification mechanics** for multi-household convergence — five

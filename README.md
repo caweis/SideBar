@@ -342,7 +342,7 @@ Every file below is a direct link.
 - [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md) — planning + field-companion schemas + coupling-handoff
 - [`docs/PATTERNS.md`](docs/PATTERNS.md) — cross-cutting design choices
 
-**[`skills/`](skills/)** — 12 copy-pasteable patterns, each one earned in production
+**[`skills/`](skills/)** — 13 copy-pasteable patterns, each one earned in production
 
 - [`canonical-data-audit.md`](skills/canonical-data-audit.md) — name the canonical/mirror relationship + drift detection
 - [`cascade-audit-script.md`](skills/cascade-audit-script.md) — grep-based gap detector for cascade gates
@@ -353,6 +353,7 @@ Every file below is a direct link.
 - [`leaflet-teardown-on-rerender.md`](skills/leaflet-teardown-on-rerender.md) — embedded interactive widgets · stash on DOM, `.remove()` before innerHTML wipe
 - [`mobile-vs-desktop-map-branching.md`](skills/mobile-vs-desktop-map-branching.md) — embedded maps · branch at click time, native Maps app on phones
 - [`mode-of-tuples-voting.md`](skills/mode-of-tuples-voting.md) — multi-field correlated votes · mode of tuples, not per-field median
+- [`nfc-finder-tag.md`](skills/nfc-finder-tag.md) — NFC tag on a physical object for stranger-scan return · URL on the tag, contact on the page, real phone and email never on the silicon
 - [`per-poi-inline-map.md`](skills/per-poi-inline-map.md) — long list of geocoded items · lazy-init map per item
 - [`phase-clearance-gates.md`](skills/phase-clearance-gates.md) — gate next section on majority-cleared, not first-vote-exists
 - [`service-worker-shell-versioning.md`](skills/service-worker-shell-versioning.md) — the "deployed but invisible" SW cache fix

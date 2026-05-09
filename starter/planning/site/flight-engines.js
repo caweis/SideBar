@@ -13,6 +13,17 @@
 //   in production. They WILL break when an engine ships a routing change.
 //   Test the link manually when something looks off.
 //
+// LIVE INVENTORY (OPTIONAL · NOT SHIPPED HERE): the `case 'seats'` deep
+// link below works for free — anyone clicking lands on a pre-filled
+// seats.aero search page. If you ALSO want live award availability
+// rendered inside your own app (the way the reference planning portal
+// shows "Aeroplan: 88,000 pts · $5.60 tax · 9+ seats" inline), you need
+// a seats.aero Pro subscription ($9.99/month, non-commercial personal
+// use only — commercial requires written approval from
+// support@seats.aero). The OSS bundle does NOT ship the live-inventory
+// proxy. See docs/PREREQUISITES.md for the full breakdown and what to
+// build if you want it.
+//
 // USAGE (vanilla module · no build step):
 //   import { buildFlightUrl, ENGINES } from './flight-engines.js';
 //   const href = buildFlightUrl('seats', {
@@ -40,7 +51,7 @@ export const ENGINES = [
     label: 'seats.aero',
     group: 'award',
     deepLinks: true,
-    notes: 'Star Alliance + OneWorld + SkyTeam award inventory. Pro tier ($9.99/mo) has API access (non-commercial only).',
+    notes: 'Deep-link to pre-filled search is free. Live in-app inventory needs Pro subscription ($9.99/mo, non-commercial only — see docs/PREREQUISITES.md).',
   },
   {
     id: 'pointme',

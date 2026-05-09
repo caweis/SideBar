@@ -42,6 +42,52 @@ forecast horizon (16 days). The free archive API has no key requirement.
 We pull from Ticketmaster + Bandsintown. Both have free tiers with API key
 signup.
 
+### seats.aero Pro subscription (optional, for live award inventory)
+
+[seats.aero](https://seats.aero) is the only flight-search engine in the
+bundle's [`flight-engines.js`](../starter/planning/site/flight-engines.js)
+that has a documented partner API on top of its consumer site. Two
+levels of integration to be clear about:
+
+- **Deep-link buttons** (what `flight-engines.js` ships out of the box):
+  every household member clicks the seats.aero button in the planning
+  starter and lands on a pre-filled search page on seats.aero's own
+  site. **No subscription required.** This is just a URL template;
+  seats.aero handles the search.
+
+- **Live award inventory rendered inside your own app** (what the
+  reference planning app does, but the OSS bundle does NOT ship):
+  shows results like *"Aeroplan: 88,000 pts · $5.60 tax · 9+ seats"*
+  inline in your own UI, without the user clicking out. This requires
+  a **seats.aero Pro subscription** ($9.99/month). The Pro tier gives
+  you an API key with 1,000 requests/day and four endpoints (Cached
+  Search, Bulk Availability, Get Trips, Get Routes). Auth is the
+  `Partner-Authorization: pro_xxx` header.
+
+**License note, important.** seats.aero's Pro API is licensed for
+**non-commercial personal use only**. Commercial or production use
+requires explicit written approval — email `support@seats.aero` with
+your use case before integrating. A coordination app for a private
+group of family or friends is the kind of thing the personal tier is
+intended for; anything more public-facing, ask first. Keep the email
+exchange so you have a clear record.
+
+If you decide to build the live-inventory proxy yourself, the reference
+app calls it `/api/award-search.js`. Three things worth doing:
+
+1. Put the API key in a Pages Function environment secret
+   (`SEATS_AERO_API_KEY`), never in browser-side code.
+2. Cache responses in D1 with a 24h TTL — both to respect the daily
+   quota and because award inventory doesn't change minute-to-minute.
+3. Fetch via origin–destination–date, not bulk; respect their
+   guidance about not hammering the API.
+
+The bundle's roadmap doesn't currently include shipping the proxy
+itself because of the license-language uncertainty around what counts
+as "commercial." If your fork wants the proxy and you've cleared the
+license question, the file is ~100 lines; happy to take a PR that
+adds it as an optional `_shared/` helper.
+
 ## Tooling
 
 ### Local machine
@@ -133,7 +179,10 @@ variables, or `wrangler secret put`):
 - **`OPEN_METEO_API_KEY`** — for paid weather forecasts (open-meteo's free
   tier covers most personal-scale apps; only needed if you exceed it)
 - **`TICKETMASTER_API_KEY`** — for events
-- **`AWARD_SEARCH_KEY`** — if you proxy any paid award-flight engines
+- **`SEATS_AERO_API_KEY`** — only if you build a live-inventory proxy
+  on top of the deep-link helpers (see seats.aero subscription section
+  above). Format: `pro_xxxxxxxxxxxxxxxxxxxxx`. Never expose to the
+  browser; always proxy via a Pages Function.
 - Any others your external proxies need
 
 Secrets are encrypted at rest and never appear in deployment logs. Don't

@@ -70,7 +70,11 @@ What you're getting:
 - The **flight-search engine catalog** — ten award + cash sites
   pre-wired with deep-link URL templates, single-helper API, single-form
   driver, drop-in extensible
-  ([`starter/planning/site/flight-engines.js`](starter/planning/site/flight-engines.js))
+  ([`starter/planning/site/flight-engines.js`](starter/planning/site/flight-engines.js)).
+  All ten deep links work for free; if you want live in-app award
+  inventory the way the reference app does it, that requires a
+  [seats.aero Pro subscription](docs/PREREQUISITES.md#seatsaero-pro-subscription-optional-for-live-award-inventory)
+  ($9.99/mo, non-commercial only)
 - A **Claude Code agent** persona — the *Sidebar engineer* — that bundles
   the method into a single file you can drop into `.claude/agents/`
   ([`agents/sidebar-engineer.md`](agents/sidebar-engineer.md))

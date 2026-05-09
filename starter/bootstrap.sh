@@ -227,6 +227,13 @@ ${B}Flight-search engines pre-wired (planning starter):${X}
   four (ITA, Going, Hopper, plus a Skyscanner multi-city corner case)
   land on the engine's form. Add your own engine in two lines: one
   switch case in ${B}buildFlightUrl${X}, one entry in ${B}ENGINES${X}.
+
+  ${Y}Note:${X} the seats.aero ${B}deep-link button${X} is free.
+  ${B}Live in-app award inventory${X} (the reference app's
+  /api/award-search proxy) needs a ${B}seats.aero Pro subscription${X}
+  (\$9.99/mo, non-commercial only). The OSS bundle ships only the
+  deep-link helpers; see ${B}docs/PREREQUISITES.md${X} for what to
+  build if you want the live-inventory proxy.
 EOF
 fi
 

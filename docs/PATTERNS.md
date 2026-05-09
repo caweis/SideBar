@@ -33,6 +33,26 @@ coordination contexts; use the mechanics, not the visual language. See
 `skills/gameify-the-convergence.md` for the full lens. The planning
 starter ships with all five wired into the date-vote section.
 
+## Extend the seed (user-adds-to-curated-catalog)
+
+When initial data is seeded from a curated source — a PDF, a spreadsheet,
+an admin import — users will eventually need to extend the list with
+things you didn't anticipate. Don't ship N add-paths for N entity types.
+Build one shared "+ Add" sheet that dispatches by `kind`, store
+`added_by` / `added_at` on every seed-extendable table, and add a small
+ad-hoc table (`plans` / `notes` / `actions`, depending on your domain)
+as the escape hatch for things that don't fit any seed schema.
+
+The pattern composes a schema primitive (two nullable columns), an API
+primitive (one POST endpoint with kind dispatch + per-kind validation),
+and a UI primitive (one shared sheet with per-context buttons + render
+hooks). Adding a ninth kind is one new entry in three authoritative
+lists; adding it correctly is what the `Verifying contract extensions`
+discipline in `docs/METHOD.md` exists to make habitual.
+
+See `skills/extend-the-seed.md` for the full pattern + the companion
+"go/skip" curate-without-deleting variant.
+
 ## Mode-of-tuples for indivisible package votes
 
 Votes that span multiple correlated dimensions (e.g. "split N nights

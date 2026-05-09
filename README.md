@@ -23,15 +23,22 @@ different data shapes. They share a substrate and a method, but they
 don't share a UI. See [`docs/COUPLING.md`](docs/COUPLING.md) for the
 two-phase pattern that ties them together.
 
-Most recent release is [v0.3.1](https://github.com/caweis/SideBar/releases/tag/v0.3.1)
-(May 2026). It did two things: sharpened Maxim 12 (the truthfulness
-one) so it explicitly covers the prose around the stoplight chart and
-not just the colored emoji rows, and added a small starter file with
-deep links to the ten flight-search sites I actually use when family
-travel comes up — seats.aero, point.me, AwardFares, PointsYeah, Google
-Flights, ITA Matrix, Skyscanner, Kayak, Going, Hopper. The
+Most recent release is [v0.3.2](https://github.com/caweis/SideBar/releases/tag/v0.3.2)
+(May 2026). Adds a new skill —
+[`extend-the-seed`](skills/extend-the-seed.md) — for the pattern where
+your initial data is curated (from a PDF, spreadsheet, admin import)
+and users need to extend the catalog during use without you shipping
+N add-paths for N tables. Plus a `Verifying contract extensions`
+subsection added to `docs/METHOD.md` under Maxim 19 · the discipline
+that catches the "I added a new value to the allowlist but forgot to
+update one of three places that also needed it" bug class. Both pieces
+came out of one afternoon of work in the reference field-companion app
+where eight new kinds got added through a single shared sheet — and
+two related bugs got caught visually within minutes of shipping. The
 [release log](https://github.com/caweis/SideBar/releases) has the
-whole arc if you want it.
+whole arc if you want it · v0.3.1 did the Honest Reporting discipline
++ ten-engine flight-search starter, v0.3.0 did the gameification skill,
+and v0.2.x earlier covered the runnable starter scaffold.
 
 The method is called **Sidebar**, named for the conversation that
 actually happens off to the side of the main meeting — where, in any
@@ -59,7 +66,7 @@ What you're getting:
 - The **two-phase trip pattern** — how to split planning from execution,
   one-way data handoff, deconfliction via multi-trip schema
   ([`docs/COUPLING.md`](docs/COUPLING.md))
-- A library of **13 skills** — small, copy-pasteable patterns the project
+- A library of **14 skills** — small, copy-pasteable patterns the project
   taught us along the way, each one earned in one production substrate
   ([`skills/`](skills/))
 - The **gamification mechanics** for multi-household convergence — five
@@ -342,13 +349,14 @@ Every file below is a direct link.
 - [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md) — planning + field-companion schemas + coupling-handoff
 - [`docs/PATTERNS.md`](docs/PATTERNS.md) — cross-cutting design choices
 
-**[`skills/`](skills/)** — 13 copy-pasteable patterns, each one earned in production
+**[`skills/`](skills/)** — 14 copy-pasteable patterns, each one earned in production
 
 - [`canonical-data-audit.md`](skills/canonical-data-audit.md) — name the canonical/mirror relationship + drift detection
 - [`cascade-audit-script.md`](skills/cascade-audit-script.md) — grep-based gap detector for cascade gates
 - [`chronological-trip-flow.md`](skills/chronological-trip-flow.md) — order companion-app UI by trip phase, not category
 - [`cloudflare-email-routing-receive.md`](skills/cloudflare-email-routing-receive.md) — receive email at a custom domain via CF Email Routing → Worker
 - [`d1-migration-log-drift.md`](skills/d1-migration-log-drift.md) — when wrangler thinks migrations are unapplied that already ran
+- [`extend-the-seed.md`](skills/extend-the-seed.md) — let users add to your seeded catalog · one shared sheet, kind dispatch, `added_by`/`added_at` columns, ad-hoc table for things that don't fit any seed schema
 - [`gameify-the-convergence.md`](skills/gameify-the-convergence.md) — five mechanics that turn group convergence into a legible game state (without slumping into badges or leaderboards)
 - [`leaflet-teardown-on-rerender.md`](skills/leaflet-teardown-on-rerender.md) — embedded interactive widgets · stash on DOM, `.remove()` before innerHTML wipe
 - [`mobile-vs-desktop-map-branching.md`](skills/mobile-vs-desktop-map-branching.md) — embedded maps · branch at click time, native Maps app on phones

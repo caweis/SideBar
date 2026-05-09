@@ -395,6 +395,69 @@ The Stoplight Chart (Maxim 12) makes verification visible:
 
 Never claim 🟢 when you mean 🟡.
 
+### Verifying contract extensions
+
+A specific failure mode of "verified" worth its own callout. When you
+add a new value to an existing list — a new entry in a switch
+statement, a new key in an allowlist, a new HTML element using an
+existing CSS pattern — *the new value is what you test, not the old
+ones still working*. The contract being correct for old values is the
+default, not the proof.
+
+Two concrete examples earned in production on a single afternoon:
+
+1. **CSS `[hidden]` attribute defeated by `display: flex`.** Existing
+   uses of `hidden` worked everywhere they had been used before. A
+   new use inside a class with `display: flex` silently failed
+   because the class's specificity beat the UA stylesheet's
+   `[hidden] { display: none }`. Manual `kindRow.hidden = true`
+   in JS was correct; the visual effect was zero. The fix was a
+   scoped `[hidden] { display: none !important }` rule. Contract
+   tests would have passed; only opening the surface visually with
+   the new entry-point caught it.
+
+2. **`VALID_KINDS` allowlist not extended for new kinds.** An
+   existing endpoint accepted six kind values via a `Set`. A new
+   feature added four more kinds and POST'd to the same endpoint.
+   The endpoint correctly rejected the new kinds with a 400
+   "invalid kind", which the client correctly translated to a UI
+   revert — so the feature looked like it worked for one frame, then
+   undid itself. The endpoint contract was right; the new
+   dimension of the contract wasn't extended to match.
+
+Both bugs had the same shape: **the system worked for the values you
+already had, and didn't work for the values you just added**.
+Curl-testing one representative shape doesn't catch this. Visual or
+end-to-end testing of *every new value* does.
+
+The discipline:
+
+- When extending a switch / allowlist / type-set / config list with a
+  new value, **list every place that needs to know about the new
+  value** before declaring done. For the +Add pattern in the
+  "extend the seed" skill, that's three places: the API's
+  `VALID_KINDS`, the API's `REQUIRED` map, and the SPA's
+  `FIELD_TEMPLATES`. Forgetting one means the value silently falls
+  off in one of those places.
+- **Test the new value, not the old ones.** "Existing kinds still
+  work" doesn't tell you anything about whether the new kind works.
+- **Make the rejection self-documenting.** Instead of
+  `error: 'invalid kind'`, return
+  `error: \`Unknown kind 'X' · expected one of \${[...VALID_KINDS].join(', ')}\``.
+  When future-you adds a new kind and forgets to extend the
+  allowlist, the error message tells you exactly which list to look
+  at.
+- **Visual end-to-end on every new entry-point.** When the new value
+  has a UI surface, click through that specific surface. The
+  failure modes that this catches are the ones that look fine in
+  curl and broken in the browser (CSS, modal state, optimistic-UI
+  reverts, render-cache misses).
+
+The diagnostic phrase to add to your project's preferences memory
+when this pattern bites: *"the contract worked for old values and
+didn't accept the new dimension"* → check every list/allowlist/
+config-set that's authoritative for the new value.
+
 ---
 
 ## Voting patterns (project-specific but reusable)
